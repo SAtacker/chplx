@@ -66,6 +66,6 @@ proc update(d : []real, d2 : []real) {
 */
 
   inlinecxx("const auto elapsed = t.elapsed();");
-  inlinecxx("std::cout << \"chapelng,\" << {} << \",\" << {} << \",\" << hpx::resource::get_num_threads() << \",\" << {} << \",\" << {} << \",\" << elapsed << \",0\";", nx, nt, dt, dx);
+  inlinecxx("std::cout << \"chapelng,\" << {} << \",\" << {} << \",\" << hpx::resource::get_num_threads() << \",\" << {} << \",\" << {} << \",\" << elapsed << \",0\\n\";", nx, nt, dt, dx);
 
 //}
