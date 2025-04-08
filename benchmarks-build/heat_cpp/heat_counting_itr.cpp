@@ -9,11 +9,11 @@
 #include <type_traits>
 
 namespace chplx {
-    static auto exec = new hpx::execution::experimental::fork_join_executor();
+    // static auto exec = new hpx::execution::experimental::fork_join_executor();
     template <typename Range, typename F, typename... Args>
     void forall_c(Range&& r, F&& f, Args&&... args)
     {
-        hpx::ranges::experimental::for_loop(hpx::execution::par.on(*exec),
+        hpx::ranges::experimental::for_loop(hpx::execution::par,
             std::forward<Range>(r),
             [&,
                 ... fargs = detail::task_intent<std::decay_t<Args>>::call(
@@ -43,8 +43,8 @@ namespace heat {
         #line 27 "/home/shreyas/workspace/chplx/benchmarks/heat.chpl"
         auto NX = nx + 1;
         #line 28 "/home/shreyas/workspace/chplx/benchmarks/heat.chpl"
-        chplx::forall_c( hpx::util::counting_shape(static_cast<std::size_t>(0), static_cast<std::size_t>(NX)), [&](auto idx) {
-            auto i = *idx;
+        chplx::forall_c( hpx::util::counting_shape(static_cast<std::size_t>(1), static_cast<std::size_t>(NX-1)), [&](auto idx) {
+            const auto i = *idx;
             #line 30 "/home/shreyas/workspace/chplx/benchmarks/heat.chpl"
             d2(i) = d(i) + ( ( ( dt * k ) / ( dx * dx ) ) * ( ( d(i + 1) + d(i - 1) ) - ( 2 * d(i) ) ) );
         });
@@ -77,7 +77,7 @@ namespace heat {
     chplx::Array<double, chplx::Domain<1> > data2(chplx::Range(0, NX+10));
     #line 44 "/home/shreyas/workspace/chplx/benchmarks/heat.chpl"
     chplx::forall_c(hpx::util::counting_shape(static_cast<std::size_t>(0), static_cast<std::size_t>(NX)), [&](auto idx) {
-        auto i = *idx;
+        const auto i = *idx;
         #line 45 "/home/shreyas/workspace/chplx/benchmarks/heat.chpl"
         data(i) = 1 + ( ( ( i - 1 ) + nx ) % nx );
         #line 46 "/home/shreyas/workspace/chplx/benchmarks/heat.chpl"
@@ -94,7 +94,7 @@ namespace heat {
     const auto elapsed = t.elapsed();
     #line 69 "/home/shreyas/workspace/chplx/benchmarks/heat.chpl"
     std::cout << "chapelng," << nx << "," << nt << "," << hpx::resource::get_num_threads() << "," << dt << "," << dx << "," << elapsed << ",0\n";
-    delete chplx::exec;
+    // delete chplx::exec;
 
     }
 

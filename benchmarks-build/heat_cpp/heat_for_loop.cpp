@@ -10,11 +10,11 @@
 
 namespace chplx {
     template <typename F, typename... Args>
-    void forall_c(std::size_t start, std::size_t end, F&& f, Args&&... args)
+    void forall_c(std::size_t start, std::size_t size, F&& f, Args&&... args)
     {
         hpx::experimental::for_loop(hpx::execution::par,
             start,
-            end,
+            start+size,
             [&,
                 ... fargs = detail::task_intent<std::decay_t<Args>>::call(
                     std::forward<Args>(args))]<typename Arg>(
@@ -43,7 +43,7 @@ namespace heat {
         #line 27 "/home/shreyas/workspace/chplx/benchmarks/heat.chpl"
         auto NX = nx + 1;
         #line 28 "/home/shreyas/workspace/chplx/benchmarks/heat.chpl"
-        chplx::forall_c(0, NX-1, [&](auto i) {
+        chplx::forall_c(1, NX-1, [&](auto i) {
             #line 30 "/home/shreyas/workspace/chplx/benchmarks/heat.chpl"
             d2(i) = d(i) + ( ( ( dt * k ) / ( dx * dx ) ) * ( ( d(i + 1) + d(i - 1) ) - ( 2 * d(i) ) ) );
         });

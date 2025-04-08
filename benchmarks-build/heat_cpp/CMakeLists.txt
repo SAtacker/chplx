@@ -26,5 +26,5 @@ target_link_libraries(heat_counting_itr PUBLIC fmt::fmt-header-only HPX::hpx Chp
 target_link_libraries(heat_for_loop PUBLIC fmt::fmt-header-only HPX::hpx Chplx::library)
 target_link_libraries(heat_coroutine PUBLIC fmt::fmt-header-only HPX::hpx Chplx::library)
 
-target_compile_options(heat_for_loop PRIVATE $<$<CONFIG:Debug>:-fsanitize=address,undefined> )
-target_link_options(heat_for_loop PRIVATE $<$<CONFIG:Debug>:-fsanitize=address,undefined>)
+# target_compile_options(heat_for_loop PRIVATE $<$<CONFIG:Debug>:-fsanitize=address,undefined> )
+# target_link_options(heat_for_loop PRIVATE $<$<CONFIG:Debug>:-fsanitize=address,undefined>)
