@@ -1344,6 +1344,45 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
 
            fl->iterator = *varsym;
            stmt = false;
+
+           std::shared_ptr<func_kind> & fk = std::get<std::shared_ptr<func_kind>>(fl->symbol.kind);
+           if (fk->symbolTableSignature.find("array_init_for") !=
+               std::string::npos)
+           {
+            std::cout << "programtreebuildingvisitor.cpp, enter, Variable, ForLoopExpression with array_init_for signature found" << std::endl;
+             // This is the iterator variable in an array init for-loop
+             // We need to find the target array variable from the parent scope
+
+             // Look for array variable in the parent scope that's being initialized
+             std::string arrayIdentifier = "";
+             std::optional<Symbol> arrayVarsym{};
+
+             // Search in parent scope for array variables
+             auto parentScopeId = symbolTable.parentSymbolTableId;
+             std::optional<std::pair<std::map<std::string, Symbol>::iterator,
+                 std::map<std::string, Symbol>::iterator>>
+                 allSymbols = symbolTable.findPrefix(parentScopeId, "");
+             if (allSymbols.has_value())
+             {
+                     for (auto it = allSymbols->first; it != allSymbols->second;
+                          ++it)
+                     {
+                    if (std::holds_alternative<std::shared_ptr<array_kind>>(
+                            it->second.kind))
+                    {
+                       arrayIdentifier = it->second.identifier;
+                       arrayVarsym = it->second;
+                       break;
+                    }
+                     }
+             }
+             std::cout << " Identifier name: " << arrayIdentifier << std::endl;
+
+             fl->iterator = *arrayVarsym; // Set the iterator to the array variable
+            //  fl->targetArray =
+            //      arrayVarsym;    // Add this field to ForLoopExpression
+             stmt = true;
+           }
        }
        else if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<ForallLoopExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
            std::shared_ptr<ForallLoopExpression> & fl =
@@ -1596,12 +1635,22 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        std::string identifier{"for" + emitChapelLine(ast)};
        std::optional<Symbol> varsym =
           symbolTable.find(symbolTableRef->id, identifier);
+      
+      if(!varsym) {
+         identifier = "array_init_for" + emitChapelLine(ast);
+         varsym = symbolTable.find(symbolTableRef->id, identifier);
+      }
 
        if(varsym.has_value() && std::holds_alternative<std::shared_ptr<func_kind>>(varsym->kind)) {
           std::vector<Statement> * cStmts = curStmts.back();
 
           std::shared_ptr<func_kind> & fk = std::get<std::shared_ptr<func_kind>>(varsym->kind);
           symbolTableRef = symbolTable.lut[fk->lutId];
+
+          if(identifier.find("array_init_for") != std::string::npos) {
+             // this is an array initialization for loop
+             std::cout << "Found array_init_for: " << identifier << std::endl;
+          }
 
           cStmts->emplace_back(
              std::make_shared<ForLoopExpression>(
