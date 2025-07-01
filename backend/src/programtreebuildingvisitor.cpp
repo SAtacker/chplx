@@ -5,6 +5,7 @@
  * Distributed under the Boost Software License, Version 1.0. *(See accompanying
  * file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
+#include "chpl/uast/Variable.h"
 #include "hpx/programtree.hpp"
 #include "hpx/programtreebuildingvisitor.hpp"
 #include "hpx/utils.hpp"
@@ -1107,7 +1108,9 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
            case 7: // ==
            case 8: // <=>
            {
+            std::cout << "programtreebuildingvisitor.cpp, enter, OpCall, identifier: " << identifier << std::endl;
                if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<ScalarDeclarationExprExpression>>(cStmts->back())) {
+                  std::cout << "Line : 1113" << std::endl; 
                   std::shared_ptr<ScalarDeclarationExprExpression> stmt =
                     std::get<std::shared_ptr<ScalarDeclarationExprExpression>>(cStmts->back());
 
@@ -1140,6 +1143,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                   //
                   // auto c = c + 1;
                   //
+                  std::cout << "Line : 1146" << std::endl; 
                   ScalarDeclarationExpression stmt =
                     std::get<ScalarDeclarationExpression>(cStmts->back());
 
@@ -1184,6 +1188,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                }
 */
                else if(1 < curStmts.size() && curStmts[curStmts.size()-2]->size() && std::holds_alternative<std::shared_ptr<ForLoopExpression>>(curStmts[curStmts.size()-2]->back())) {
+                  std::cout << "Line : 1191" << std::endl; 
                   std::shared_ptr<ForLoopExpression> & fle =
                      std::get<std::shared_ptr<ForLoopExpression>>(curStmts[curStmts.size()-2]->back());
 
@@ -1205,6 +1210,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                   }
                }
                else if(1 < curStmts.size() && curStmts[curStmts.size()-2]->size() && std::holds_alternative<std::shared_ptr<ForallLoopExpression>>(curStmts[curStmts.size()-2]->back())) {
+                  std::cout << "Line : 1213" << std::endl; 
                   std::shared_ptr<ForallLoopExpression> & fle =
                      std::get<std::shared_ptr<ForallLoopExpression>>(curStmts[curStmts.size()-2]->back());
 
@@ -1226,6 +1232,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                   }
                }
                else if(1 < curStmts.size() && curStmts[curStmts.size()-2]->size() && std::holds_alternative<std::shared_ptr<CoforallLoopExpression>>(curStmts[curStmts.size()-2]->back())) {
+                  std::cout << "Line : 1235" << std::endl; 
                   std::shared_ptr<CoforallLoopExpression> & fle =
                      std::get<std::shared_ptr<CoforallLoopExpression>>(curStmts[curStmts.size()-2]->back());
 
@@ -1247,6 +1254,15 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                   }
                }
                else {
+                  std::cout << "Line : 1257" << std::endl; 
+                  std::cout << std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(curStmts[curStmts.size()-2]->back()) << std::endl;
+                  std::cout << std::holds_alternative<std::shared_ptr<ForLoopExpression>>(curStmts[curStmts.size()-3]->back()) << std::endl;
+                  if(curStmts.size() > 3){
+                     if ( std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(curStmts[curStmts.size()-2]->back())
+                   && std::holds_alternative<std::shared_ptr<ForLoopExpression>>(curStmts[curStmts.size()-3]->back()) 
+                     ) break;
+                  }
+                  std::cout <<"here" << std::endl;
                   cStmts->emplace_back(
                      std::make_shared<BinaryOpExpression>(BinaryOpExpression{
                         {{symbolTableRef->id}, identifier, ast}, {}
@@ -1388,22 +1404,33 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
              std::vector<Statement> * cStmts = curStmts.back();
              varsymInsideForLoop->kind = std::make_shared<func_kind>(func_kind{{
                    symbolTable.symbolTableRef->id, {}, {}, {}}, true, false});
-            //  cStmts->emplace_back(
+            cStmts->emplace_back(
+                     std::make_shared<BinaryOpExpression>(BinaryOpExpression{
+                        {{symbolTableRef->id}, "=", ast}, {}
+                     })
+                  );
+                  auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
+            //  bo->statements.emplace_back(
             //       std::make_shared<ScalarDeclarationExprExpression>(ScalarDeclarationExprExpression{
             //          {{symbolTableRef->id}, arrayIdentifierForLoopExpression, varsymInsideForLoop->kind, emitChapelLine(ast), -1, varsymInsideForLoop->isConfig},{}}
             //       ));
-            cStmts->emplace_back(
-               std::make_shared<BinaryOpExpression>(BinaryOpExpression{
-                  {{symbolTableRef->id}, "=", ast}, {
+           
+             
+             bo->statements.emplace_back(
+
                         VariableExpression{std::make_shared<Symbol>(Symbol{
                            varsymInsideForLoop->kind,
                            arrayIdentifierForLoopExpression, // This is "arr(i)"
                            {}, -1, false, symbolTableRef->id
                         })}
+            );
+             bo->statements.emplace_back(
+               std::make_shared<BinaryOpExpression>(BinaryOpExpression{
+                  {{symbolTableRef->id}, "=", ast}, {
                   }
                })
-            );   
-            auto & se = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
+            ); 
+            auto & se = std::get<std::shared_ptr<BinaryOpExpression>>(bo->statements.back());
                curStmts.emplace_back(&(se->statements));
            }
        }
