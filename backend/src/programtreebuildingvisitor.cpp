@@ -1415,23 +1415,42 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
             //          {{symbolTableRef->id}, arrayIdentifierForLoopExpression, varsymInsideForLoop->kind, emitChapelLine(ast), -1, varsymInsideForLoop->isConfig},{}}
             //       ));
            
-             
-             bo->statements.emplace_back(
-
-                        VariableExpression{std::make_shared<Symbol>(Symbol{
-                           varsymInsideForLoop->kind,
-                           arrayIdentifierForLoopExpression, // This is "arr(i)"
-                           {}, -1, false, symbolTableRef->id
-                        })}
+            
+            bo->statements.emplace_back(
+               
+               VariableExpression{std::make_shared<Symbol>(Symbol{
+                  varsymInsideForLoop->kind,
+                  arrayIdentifierForLoopExpression, // This is "arr(i)"
+                  {}, -1, false, symbolTableRef->id
+               })}
             );
-             bo->statements.emplace_back(
-               std::make_shared<BinaryOpExpression>(BinaryOpExpression{
-                  {{symbolTableRef->id}, "=", ast}, {
-                  }
-               })
-            ); 
-            auto & se = std::get<std::shared_ptr<BinaryOpExpression>>(bo->statements.back());
-               curStmts.emplace_back(&(se->statements));
+            // Create right-hand side: i + 1
+            //  bo->statements.emplace_back(
+            //     std::make_shared<BinaryOpExpression>(BinaryOpExpression{
+            //        {{symbolTableRef->id}, "+", ast}, {}
+            //     })
+            //  );
+             
+             // Add operands to the + expression
+            //  auto & eq_op = std::get<std::shared_ptr<BinaryOpExpression>>(bo->statements.back());
+             
+            //  // Add iterator variable as first operand
+            //  eq_op->statements.emplace_back(
+            //     VariableExpression{std::make_shared<Symbol>(*varsym)}
+            //  );
+             
+             // Add constant 1 as second operand
+            //  addOp->statements.emplace_back(
+            //     LiteralExpression{int_kind{}, nullptr}
+            //  );
+            //  bo->statements.emplace_back(
+            //    std::make_shared<BinaryOpExpression>(BinaryOpExpression{
+            //       {{symbolTableRef->id}, "=", ast}, {
+            //       }
+            //    })
+            // ); 
+            // auto & se = std::get<std::shared_ptr<BinaryOpExpression>>(bo->statements.back());
+               // curStmts.emplace_back(&(bo->statements));
            }
        }
        else if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<ForallLoopExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
