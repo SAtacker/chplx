@@ -1244,7 +1244,16 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                      })}
                   );
 
-                  curStmts.push_back(&(bo->statements));
+                  bo->statements.emplace_back(
+                     std::make_shared<BinaryOpExpression>(
+                        BinaryOpExpression{ {{symbolTableRef->id}, identifier, ast}, {} }
+                     )
+                  );
+
+                  auto & rhsOp = std::get<std::shared_ptr<BinaryOpExpression>>(bo->statements.back());
+                  curStmts.push_back(&(rhsOp->statements));
+
+                  // curStmts.push_back(&(bo->statements));
 
                   if(fle->indexSet.size() < 2) {
                      fle->indexSet.emplace_back(
@@ -1311,11 +1320,11 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                   std::cout << "Line : 1257" << std::endl; 
                   std::cout << std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(curStmts[curStmts.size()-2]->back()) << std::endl;
                   std::cout << std::holds_alternative<std::shared_ptr<ForLoopExpression>>(curStmts[curStmts.size()-3]->back()) << std::endl;
-                  if(curStmts.size() > 3){
-                     if ( std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(curStmts[curStmts.size()-2]->back())
-                   && std::holds_alternative<std::shared_ptr<ForLoopExpression>>(curStmts[curStmts.size()-3]->back()) 
-                     ) break;
-                  }
+                  // if(curStmts.size() > 3){
+                  //    if ( std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(curStmts[curStmts.size()-2]->back())
+                  //  && std::holds_alternative<std::shared_ptr<ForLoopExpression>>(curStmts[curStmts.size()-3]->back()) 
+                  //    ) break;
+                  // }
                   std::cout <<"here" << std::endl;
                   cStmts->emplace_back(
                      std::make_shared<BinaryOpExpression>(BinaryOpExpression{
