@@ -1192,6 +1192,60 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                   std::shared_ptr<ForLoopExpression> & fle =
                      std::get<std::shared_ptr<ForLoopExpression>>(curStmts[curStmts.size()-2]->back());
 
+                  std::string arrayIdentifier = "";
+                  std::optional<Symbol> arrayVarsym{};
+
+                  // Search in parent scope for array variables
+                  auto parentScopeId = symbolTable.parentSymbolTableId;
+                  std::optional<std::pair<std::map<std::string, Symbol>::iterator,
+                     std::map<std::string, Symbol>::iterator>>
+                     allSymbols = symbolTable.findPrefix(parentScopeId, "");
+                  if (allSymbols.has_value())
+                  {
+                           for (auto it = allSymbols->first; it != allSymbols->second;
+                              ++it)
+                           {
+                        if (std::holds_alternative<std::shared_ptr<array_kind>>(
+                                 it->second.kind))
+                        {
+                           arrayIdentifier = it->second.identifier;
+                           arrayVarsym = it->second;
+                           break;
+                        }
+                           }
+                  }
+                  std::cout << " Identifier name: " << arrayIdentifier << std::endl;
+
+                  auto varsymInsideForLoop = arrayVarsym;
+                  std::string iteratorName = fle->iterator.identifier;
+                  std::cout << "Iterator name: " << iteratorName << std::endl;
+                  auto arrayIdentifierForLoopExpression = arrayIdentifier + "(" + iteratorName + ")";
+                  std::vector<Statement> * cStmts = curStmts.back();
+                  varsymInsideForLoop->kind = std::make_shared<func_kind>(func_kind{{
+                        symbolTable.symbolTableRef->id, {}, {}, {}}, true, false});
+                  cStmts->emplace_back(
+                           std::make_shared<BinaryOpExpression>(BinaryOpExpression{
+                              {{symbolTableRef->id}, "=", ast}, {}
+                           })
+                        );
+                  auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
+                  //  bo->statements.emplace_back(
+                  //       std::make_shared<ScalarDeclarationExprExpression>(ScalarDeclarationExprExpression{
+                  //          {{symbolTableRef->id}, arrayIdentifierForLoopExpression, varsymInsideForLoop->kind, emitChapelLine(ast), -1, varsymInsideForLoop->isConfig},{}}
+                  //       ));
+               
+                  
+                  bo->statements.emplace_back(
+                     
+                     VariableExpression{std::make_shared<Symbol>(Symbol{
+                        varsymInsideForLoop->kind,
+                        arrayIdentifierForLoopExpression, // This is "arr(i)"
+                        {}, -1, false, symbolTableRef->id
+                     })}
+                  );
+
+                  curStmts.push_back(&(bo->statements));
+
                   if(fle->indexSet.size() < 2) {
                      fle->indexSet.emplace_back(
                         std::make_shared<BinaryOpExpression>(BinaryOpExpression{
@@ -1200,13 +1254,13 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                      );
                   }
                   else {
-                     cStmts->emplace_back(
-                        std::make_shared<BinaryOpExpression>(BinaryOpExpression{
-                           {{symbolTableRef->id}, identifier, ast}, {}
-                        })
-                     );
-                     auto & nbo = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
-                     curStmts.push_back(&(nbo->statements));
+                     // cStmts->emplace_back(
+                     //    std::make_shared<BinaryOpExpression>(BinaryOpExpression{
+                     //       {{symbolTableRef->id}, identifier, ast}, {}
+                     //    })
+                     // );
+                     // auto & nbo = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
+                     // curStmts.push_back(&(nbo->statements));
                   }
                }
                else if(1 < curStmts.size() && curStmts[curStmts.size()-2]->size() && std::holds_alternative<std::shared_ptr<ForallLoopExpression>>(curStmts[curStmts.size()-2]->back())) {
@@ -1399,31 +1453,31 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
             //  fl->targetArray =
             //      arrayVarsym;    // Add this field to ForLoopExpression
             //  stmt = true;
-             varsymInsideForLoop = arrayVarsym;
-             arrayIdentifierForLoopExpression = arrayIdentifier + "(" + identifier + ")";
-             std::vector<Statement> * cStmts = curStmts.back();
-             varsymInsideForLoop->kind = std::make_shared<func_kind>(func_kind{{
-                   symbolTable.symbolTableRef->id, {}, {}, {}}, true, false});
-            cStmts->emplace_back(
-                     std::make_shared<BinaryOpExpression>(BinaryOpExpression{
-                        {{symbolTableRef->id}, "=", ast}, {}
-                     })
-                  );
-                  auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
-            //  bo->statements.emplace_back(
-            //       std::make_shared<ScalarDeclarationExprExpression>(ScalarDeclarationExprExpression{
-            //          {{symbolTableRef->id}, arrayIdentifierForLoopExpression, varsymInsideForLoop->kind, emitChapelLine(ast), -1, varsymInsideForLoop->isConfig},{}}
-            //       ));
+            //  varsymInsideForLoop = arrayVarsym;
+            //  arrayIdentifierForLoopExpression = arrayIdentifier + "(" + identifier + ")";
+            //  std::vector<Statement> * cStmts = curStmts.back();
+            //  varsymInsideForLoop->kind = std::make_shared<func_kind>(func_kind{{
+            //        symbolTable.symbolTableRef->id, {}, {}, {}}, true, false});
+            // cStmts->emplace_back(
+            //          std::make_shared<BinaryOpExpression>(BinaryOpExpression{
+            //             {{symbolTableRef->id}, "=", ast}, {}
+            //          })
+            //       );
+            //       auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
+            // //  bo->statements.emplace_back(
+            // //       std::make_shared<ScalarDeclarationExprExpression>(ScalarDeclarationExprExpression{
+            // //          {{symbolTableRef->id}, arrayIdentifierForLoopExpression, varsymInsideForLoop->kind, emitChapelLine(ast), -1, varsymInsideForLoop->isConfig},{}}
+            // //       ));
            
             
-            bo->statements.emplace_back(
+            // bo->statements.emplace_back(
                
-               VariableExpression{std::make_shared<Symbol>(Symbol{
-                  varsymInsideForLoop->kind,
-                  arrayIdentifierForLoopExpression, // This is "arr(i)"
-                  {}, -1, false, symbolTableRef->id
-               })}
-            );
+            //    VariableExpression{std::make_shared<Symbol>(Symbol{
+            //       varsymInsideForLoop->kind,
+            //       arrayIdentifierForLoopExpression, // This is "arr(i)"
+            //       {}, -1, false, symbolTableRef->id
+            //    })}
+            // );
             // Create right-hand side: i + 1
             //  bo->statements.emplace_back(
             //     std::make_shared<BinaryOpExpression>(BinaryOpExpression{
