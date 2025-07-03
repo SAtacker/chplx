@@ -1196,24 +1196,34 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                   std::optional<Symbol> arrayVarsym{};
 
                   // Search in parent scope for array variables
-                  auto parentScopeId = symbolTable.parentSymbolTableId;
-                  std::optional<std::pair<std::map<std::string, Symbol>::iterator,
-                     std::map<std::string, Symbol>::iterator>>
-                     allSymbols = symbolTable.findPrefix(parentScopeId, "");
-                  if (allSymbols.has_value())
-                  {
-                           for (auto it = allSymbols->first; it != allSymbols->second;
-                              ++it)
-                           {
-                        if (std::holds_alternative<std::shared_ptr<array_kind>>(
-                                 it->second.kind))
-                        {
-                           arrayIdentifier = it->second.identifier;
-                           arrayVarsym = it->second;
-                           break;
-                        }
-                           }
+                  if(pendingArrayForLoopSymbols.size() > 0) {
+                     arrayVarsym = pendingArrayForLoopSymbols[0];
+                     pendingArrayForLoopSymbols.erase(pendingArrayForLoopSymbols.begin());
                   }
+                  else if (symbolTable.parentSymbolTableId != symbolTableRef->id) {
+                     // If no pending array symbols, search in parent scope
+                     auto parentScopeId = symbolTable.parentSymbolTableId;
+                     std::optional<std::pair<std::map<std::string, Symbol>::iterator,
+                        std::map<std::string, Symbol>::iterator>>
+                        allSymbols = symbolTable.findPrefix(parentScopeId, "");
+                     if (allSymbols.has_value())
+                     {
+                              for (auto it = allSymbols->first; it != allSymbols->second;
+                                 ++it)
+                              {
+                           if (std::holds_alternative<std::shared_ptr<array_kind>>(
+                                    it->second.kind))
+                           {
+                              arrayIdentifier = it->second.identifier;
+                              arrayVarsym = it->second;
+
+                              // let it run until the last array variable
+                           }
+                              }
+                     }
+                  }
+                  
+                  arrayIdentifier = arrayVarsym->identifier;
                   std::cout << " Identifier name: " << arrayIdentifier << std::endl;
 
                   auto varsymInsideForLoop = arrayVarsym;
@@ -1453,11 +1463,12 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                     {
                        arrayIdentifier = it->second.identifier;
                        arrayVarsym = it->second;
-                       break;
+                       pendingArrayForLoopSymbols.push_back(arrayVarsym);
                     }
                      }
              }
-             std::cout << " Identifier name: " << arrayIdentifier << std::endl;
+            //  std::cout << " Identifier name: " << arrayIdentifier << std::endl;
+            //  std::cout << " varsym name: " << varsym->identifier << std::endl;
 
             //  fl->targetArray =
             //      arrayVarsym;    // Add this field to ForLoopExpression
