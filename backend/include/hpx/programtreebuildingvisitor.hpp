@@ -24,6 +24,7 @@
 #include <unordered_map>
 #include <variant>
 #include <vector>
+#include <queue>
 
 using namespace chplx::ast::hpx;
 using namespace chpl;
@@ -50,7 +51,7 @@ struct ProgramTreeBuildingVisitor {
 
    std::vector< std::vector<Statement> * > curStmts;
    std::optional<uast::AstTag> prevTag;
-   std::vector<std::optional<Symbol>> pendingArrayForLoopSymbols;
+   std::queue<std::optional<Symbol>> pendingArrayForLoopSymbols;
 
    static std::unordered_map<std::string, int> operatorEncoder;
 };

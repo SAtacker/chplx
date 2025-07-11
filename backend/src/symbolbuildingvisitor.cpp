@@ -1317,38 +1317,47 @@ std::cout << "BLOCK HERE" << std::endl;
     {
         // symbol.scopePtr = the scope where the function is defined (equivalent to a lutId)
         //
-        if(std::holds_alternative<std::shared_ptr<array_kind>>(sym->get().kind)){
-         // This is a for-loop expression used to initialize an array
-         std::shared_ptr<array_kind> & arrk = std::get<std::shared_ptr<array_kind>>(sym->get().kind);
-         
-         // Mark this as an array initialization for-loop
-         symstack.emplace_back(Symbol{{
-               std::make_shared<func_kind>(func_kind{{
-                  symbolTable.symbolTableRef->id, {}, {}, {}}}),
-               std::string{"array_init_for" + emitChapelLine(ast)},
-               {}, -1, false, symbolTable.symbolTableRef->id
-         }});
+       bool isArrayInitExpr = symnode    // we have a current AST node
+           && symnode->tag() == asttags::Variable    // that is a `var …` decl
+           && std::holds_alternative<std::shared_ptr<array_kind>>(
+                  sym->get().kind);    // whose kind is still array
 
-         std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
-         const std::size_t parScope = symbolTable.symbolTableRef->id;
-         symbolTable.pushScope();
-         
-         auto prevSym = sym;
-         sym.reset();
-         sym = symstack.back();
+       if (std::holds_alternative<std::shared_ptr<array_kind>>(
+               sym->get().kind) &&
+           isArrayInitExpr)
+       {
+          // This is a for-loop expression used to initialize an array
+          std::shared_ptr<array_kind>& arrk =
+              std::get<std::shared_ptr<array_kind>>(sym->get().kind);
 
-         std::shared_ptr<func_kind> & fk = 
-               std::get<std::shared_ptr<func_kind>>(sym->get().kind);
+          // Mark this as an array initialization for-loop
+          symstack.emplace_back(
+              Symbol{{std::make_shared<func_kind>(func_kind{
+                          {symbolTable.symbolTableRef->id, {}, {}, {}}, false,
+                          false, true, sym->get().identifier, sym}),
+                  std::string{"array_init_for" + emitChapelLine(ast)}, {}, -1,
+                  false, symbolTable.symbolTableRef->id}});
 
-         fk->symbolTableSignature = sym->get().identifier;
-         fk->lutId = symbolTable.symbolTableRef->id;
+          std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef =
+              symbolTable.symbolTableRef;
+          const std::size_t parScope = symbolTable.symbolTableRef->id;
+          symbolTable.pushScope();
 
-         symbolTable.parentSymbolTableId = parScope;
-         symbolTable.symbolTableRef->parent = prevSymbolTableRef;
+          auto prevSym = sym;
+          sym.reset();
+          sym = symstack.back();
 
-         symnode = const_cast<uast::AstNode*>(ast);
+          std::shared_ptr<func_kind>& fk =
+              std::get<std::shared_ptr<func_kind>>(sym->get().kind);
 
-        }
+          fk->symbolTableSignature = sym->get().identifier;
+          fk->lutId = symbolTable.symbolTableRef->id;
+
+          symbolTable.parentSymbolTableId = parScope;
+          symbolTable.symbolTableRef->parent = prevSymbolTableRef;
+
+          symnode = const_cast<uast::AstNode*>(ast);
+       }
         else{
          symstack.emplace_back(
             Symbol{{
