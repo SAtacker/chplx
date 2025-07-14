@@ -56,6 +56,10 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
       Symbol{{std::make_shared<cxxfunc_kind>(cxxfunc_kind{{{}, "inlinecxx", {}, nil_kind{}}}), std::string{"inlinecxx"}, {}, -1, false, symbolTable.symbolTableRef->id}}
    );
 
+   addSymbolEntry("writeln",
+      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "writeln", {}, nil_kind{}}}), std::string{"writeln"}, {}, -1, false, symbolTable.symbolTableRef->id}}
+   );
+
    // incdirs - allows users to provide include paths for header files used in `inlinecxx` 
    //
    addSymbolEntry("incdirs",

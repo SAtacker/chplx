@@ -740,11 +740,23 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
           cStmts->emplace_back(LiteralExpression{string_kind{}, ast});
        }
-       else if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<FunctionCallExpression>>(cStmts->back())) {
-          std::shared_ptr<FunctionCallExpression> & fce =
-             std::get<std::shared_ptr<FunctionCallExpression>>(cStmts->back()); 
-          fce->arguments.push_back(LiteralExpression{string_kind{}, ast});
-       }
+       // uncommenting below will cause string literals to be in whatever calls happen to be
+       // at the end of the statement list, which is not what we want
+       // writeln("Hello", betad(1), "World");
+       // Enter writeln: you emit a FunctionCallExpression for writeln, then push its args-list onto curStmts.
+       // StringLiteral "Hello"->falls to the else-branch and goes into writeln's args.
+       // Enter betad(1): emit its call, push betad's args-list.
+       // IntLiteral 1->goes into betad's args.
+       // Exit betad: pop back to writeln's args-list.
+       // StringLiteral "World"->now:
+       // curStmts.back() is writeln's args (a vector containing "Hello" and the betad call).
+       // BUT cStmts->back() is the very last element of that list, which is the betad call.
+       // The special-case sees a FunctionCallExpression at the back, and so it wrongly appends "World" into betad's arguments instead of writeln's.
+       //  else if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<FunctionCallExpression>>(cStmts->back())) {
+       //     std::shared_ptr<FunctionCallExpression> & fce =
+       //        std::get<std::shared_ptr<FunctionCallExpression>>(cStmts->back());
+       //     fce->arguments.push_back(LiteralExpression{string_kind{}, ast});
+       //  }
        else if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<ReturnExpression>>(cStmts->back())) {
            std::shared_ptr<ReturnExpression> & ret = std::get<std::shared_ptr<ReturnExpression>>(cStmts->back());
            ret->statement.emplace_back(LiteralExpression{string_kind{}, ast});

@@ -571,6 +571,11 @@ void FunctionCallExpression::emit(std::ostream & os) const {
           os << v.os.str()  << '(' << inside_par << ')';
       }
       else {
+         std::string identifier_str{symbol.identifier.c_str()};
+         if(symbol.identifier == "writeln") {
+            identifier_str = "chplx::writeln";
+         }
+
          for(std::size_t i = 1; i < args_sz; ++i) {
             fn_fmt_str += (i == 1) ? "{}" : ", {}";
             Statement const& stmt = arguments[i];
@@ -579,8 +584,8 @@ void FunctionCallExpression::emit(std::ostream & os) const {
             store.push_back(v.os.str());
          }
 
-         auto pos = symbol.identifier.find('|');
-         os << symbol.identifier.substr( 0, (pos == std::string::npos) ? symbol.identifier.size() : pos ) << '(' << fmt::vformat(fn_fmt_str, store) << ")";
+         auto pos = identifier_str.find('|');
+         os << identifier_str.substr( 0, (pos == std::string::npos) ? identifier_str.size() : pos ) << '(' << fmt::vformat(fn_fmt_str, store) << ")";
       }
    }
 }
