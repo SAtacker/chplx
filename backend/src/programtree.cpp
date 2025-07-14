@@ -462,7 +462,11 @@ struct ArgumentVisitor {
        std::visit(*this, e.kind);
     }
     void operator()(VariableExpression const& e) {
-       os << e.sym->identifier;
+       std::string ident{e.sym->identifier};
+       if(ident == "numLocales") {
+          ident = "chplx::numLocales";
+       }
+       os << ident;
     }
     void operator()(std::shared_ptr<FunctionCallExpression> const& node) {
        node->emit(os);
@@ -594,7 +598,13 @@ void FunctionDeclarationExpression::emit(std::ostream & os) const {
 }
 
 void VariableExpression::emit(std::ostream & os) const {
-    os << sym->identifier;
+   std::string ident{sym->identifier};
+   if (ident == "numLocales")
+   {
+      ident = "chplx::numLocales";
+   }
+
+   os << ident;
 };
 
 void LiteralExpression::emit(std::ostream & os) const {

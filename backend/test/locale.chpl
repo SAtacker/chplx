@@ -1,0 +1,1 @@
+writeln("This program is running on ", numLocales, " locales");

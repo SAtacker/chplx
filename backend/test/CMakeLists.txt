@@ -27,6 +27,7 @@ set(tests
     forall
     tup
     heat
+    locale
 )
 
 foreach(test ${tests})
