@@ -61,6 +61,17 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
       Symbol{{std::make_shared<func_kind>(func_kind{{{}, "writeln", {}, nil_kind{}}}), std::string{"writeln"}, {}, -1, false, symbolTable.symbolTableRef->id}}
    );
 
+   addSymbolEntry("here",
+       Symbol{{std::make_shared<class_kind>(class_kind{{{}, "here",
+                  //  {Symbol{{std::make_shared<func_kind>(
+                  //               func_kind{{{}, "id", {}, int_kind{}}}),
+                  //      std::string{"id"}, {}, -1, false,
+                  //      symbolTable.symbolTableRef->id}}}
+                  {}
+                     }}),
+           std::string{"here"}, {}, -1, false,
+           symbolTable.symbolTableRef->id}});
+
    // incdirs - allows users to provide include paths for header files used in `inlinecxx` 
    //
    addSymbolEntry("incdirs",
@@ -239,6 +250,25 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     }
     break;
     case asttags::Dot:
+    {
+      const std::string field_name  = dynamic_cast<const Dot *>(ast)->field().str();
+      const std::string class_name = dynamic_cast<Identifier const*>(dynamic_cast<const Dot *>(ast)->receiver())->name().c_str();
+      if(field_name == "id" && class_name == "here") {
+         // // auto &
+         // std::cout << "Dot Expression: " << class_name << "." << field_name << std::endl;
+         // const std::size_t lutId = sym->get().scopeId;
+         // auto csym = symbolTable.find(lutId, class_name);
+         // if(csym) {
+         //    std::cout << "Found symbol: " << csym->identifier << std::endl;
+         //    csym->get().scopeId = symbolTable.symbolTableRef->id;
+         // }
+         // auto fsym = symbolTable.find(lutId, class_name);
+         // if(fsym) {
+         //    std::cout << "Found symbol: " << fsym->identifier << std::endl;
+         //    fsym->get().scopeId = symbolTable.symbolTableRef->id;
+         // }
+      }
+    }
     break;
     case asttags::EmptyStmt:
     break;
@@ -251,6 +281,9 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::Identifier:
     {
        std::string identifier_str{dynamic_cast<Identifier const*>(ast)->name().c_str()};
+       std::cout << "Identifier: " << identifier_str << std::endl;
+       std::cout << "has class : " << std::holds_alternative<std::shared_ptr<class_kind>>(sym->get().kind) << std::endl;
+       std::cout << "has func : " << std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind) << std::endl;
 
        if(sym && !std::holds_alternative<std::monostate>(sym->get().kind)) {
           const std::size_t lutId = sym->get().scopeId;

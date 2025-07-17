@@ -19,6 +19,26 @@ namespace locale {
 #line 1 "locale.chpl"
         chplx::writeln(
             "This program is running on ", chplx::numLocales, " locales");
+#line 3 "locale.chpl"
+        auto thisLocale = chplx::here.id();
+#line 4 "locale.chpl"
+        chplx::writeln("This locale ID is: ", thisLocale);
+#line 7 "locale.chpl"
+        auto thisLocale2 = chplx::here.id();
+#line 8 "locale.chpl"
+        chplx::writeln("This locale ID is: ", thisLocale2);
+#line 10 "locale.chpl"
+        auto thisLocale3 = chplx::here.id();
+#line 12 "locale.chpl"
+        auto x = chplx::here.id();
+#line 14 "locale.chpl"
+        std::int64_t b;
+#line 15 "locale.chpl"
+        b = chplx::here.id();
+#line 16 "locale.chpl"
+        chplx::writeln("This locale ID is: ", b);
+#line 18 "locale.chpl"
+        chplx::writeln("This locale ID is: ", x);
 
         delete exec;
     }

@@ -54,6 +54,8 @@ struct ProgramTreeBuildingVisitor {
    std::optional<uast::AstTag> prevTag;
    std::deque<std::optional<Symbol>> pendingArrayForLoopSymbols;
    std::map<std::string, bool> pendingArrayForLoopSymbolsMap;
+   
+   bool pushedDot = false;
 
    static std::unordered_map<std::string, int> operatorEncoder;
 };

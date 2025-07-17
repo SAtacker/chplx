@@ -9,11 +9,38 @@
 
 #pragma once
 
-#include <string>
+#include <cxxabi.h>
 #include <filesystem>
+#include <string>
+#include <typeinfo>
+#include <variant>
 #include <vector>
 
 namespace chplx::util {
+
+    namespace detail {
+        template <typename T>
+        std::string demangle()
+        {
+            const char* name = typeid(T).name();
+            int status = 0;
+            std::unique_ptr<char, decltype(&std::free)> demangled{
+                abi::__cxa_demangle(name, nullptr, nullptr, &status),
+                &std::free};
+            return (status == 0 ? demangled.get() : name);
+        }
+        template <typename... Ts>
+        std::string variant_active_type(const std::variant<Ts...>& v)
+        {
+            return std::visit(
+                [](auto&& x) {
+                    // decay_t to strip references/const-qualifiers
+                    using U = std::decay_t<decltype(x)>;
+                    return demangle<U>();
+                },
+                v);
+        }
+    }    // namespace detail
 
 // global options
 extern bool suppressLineDirectives;
