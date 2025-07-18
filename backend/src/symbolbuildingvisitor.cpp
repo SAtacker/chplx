@@ -42,7 +42,7 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
    addSymbolEntry("bool", Symbol{{bool_kind{}, std::string{"bool"}, {}, -1, false, symbolTable.symbolTableRef->id}});
    addSymbolEntry("string", Symbol{{string_kind{}, std::string{"string"}, {}, -1, false, symbolTable.symbolTableRef->id}});
    addSymbolEntry("int", Symbol{{int_kind{}, std::string{"int"}, {}, -1, false, symbolTable.symbolTableRef->id}});
-   addSymbolEntry("numLocales", Symbol{{int_kind{}, std::string{"numLocales"}, {}, 1, false, symbolTable.symbolTableRef->id}});
+   addSymbolEntry("numLocales", Symbol{{int_kind{}, std::string{"numLocales"}, {}, 0, false, symbolTable.symbolTableRef->id}});
    addSymbolEntry("real", Symbol{{real_kind{}, std::string{"real"}, {}, -1, false, symbolTable.symbolTableRef->id}});
    addSymbolEntry("byte", Symbol{{byte_kind{}, std::string{"byte"}, {}, -1, false, symbolTable.symbolTableRef->id}});
    addSymbolEntry("complex", Symbol{{complex_kind{}, std::string{"complex"}, {}, -1, false, symbolTable.symbolTableRef->id}});
@@ -71,7 +71,19 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
                      }}),
            std::string{"here"}, {}, -1, false,
            symbolTable.symbolTableRef->id}});
-
+   addSymbolEntry("Locales",
+       Symbol{{std::make_shared<array_kind>(array_kind{{{}, "Locales",
+                  //  {Symbol{{std::make_shared<func_kind>(
+                  //               func_kind{{{}, "id", {}, int_kind{}}}),
+                  //      std::string{"id"}, {}, -1, false,
+                  //      symbolTable.symbolTableRef->id}}}
+                  {}
+                     }}),
+           std::string{"Locales"}, {}, -1, false,
+           symbolTable.symbolTableRef->id}});
+   
+   addSymbolEntry("locale",
+       Symbol{{locale_kind{}, std::string{"locale"}, {}, -1, false, symbolTable.symbolTableRef->id}});
    // incdirs - allows users to provide include paths for header files used in `inlinecxx` 
    //
    addSymbolEntry("incdirs",
@@ -298,6 +310,9 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
              if(fsym) {
                 std::shared_ptr<array_kind> & symref =
                    std::get<std::shared_ptr<array_kind>>(sym->get().kind);
+                if(fsym->identifier == identifier_str && identifier_str == "numLocales"){
+                  fsym->scopeId = symbolTable.symbolTableRef->id;
+                }
 
                 auto & domk = std::get<std::shared_ptr<domain_kind>>(symref->args.back().kind);
                 if(0 < domk->args.size() &&
@@ -1359,6 +1374,8 @@ std::cout << "BLOCK HERE" << std::endl;
            && symnode->tag() == asttags::Variable    // that is a `var …` decl
            && std::holds_alternative<std::shared_ptr<array_kind>>(
                   sym->get().kind);    // whose kind is still array
+       std::cout << "For loop: " << emitChapelLine(ast) << std::endl;
+       std::cout << "IsArrayInitFor loop: " << isArrayInitExpr << std::endl;
 
        if (std::holds_alternative<std::shared_ptr<array_kind>>(
                sym->get().kind) &&

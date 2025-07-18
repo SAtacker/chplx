@@ -16,3 +16,6 @@ b = here.id;
 writeln("This locale ID is: ", b);
 
 writeln("This locale ID is: ", x);
+
+var MyLocaleArray: [0..numLocales] locale =
+      for i in 0..numLocales do Locales[(i)%numLocales];

@@ -83,6 +83,7 @@ struct string_kind {
 };
 
 struct auto_kind {};
+struct locale_kind {};
 
 struct ref_kind;
 struct const_kind;
@@ -112,6 +113,7 @@ using kind_types = std::variant<
    real_kind,
    complex_kind,
    string_kind,
+   locale_kind,
    std::shared_ptr<range_kind>,
    std::shared_ptr<domain_kind>,
    std::shared_ptr<ref_kind>,
@@ -174,7 +176,8 @@ struct SymbolBase {
     std::size_t scopeId;
 
     bool isIntegralKind() {
-        return kind.index() < 10 && scopeId == 0 && (
+      std::cout << "isIntegralKind Identifier : " << identifier << std::endl;
+      bool res = (kind.index() < 10 && scopeId == 0 && (
            identifier.find("nil") != std::string::npos ||
            identifier.find("bool") != std::string::npos ||
            identifier.find("string") != std::string::npos ||
@@ -183,7 +186,10 @@ struct SymbolBase {
            identifier.find("byte") != std::string::npos ||
            identifier.find("complex") != std::string::npos ||
            identifier.find("range") != std::string::npos ||
-           identifier.find("domain") != std::string::npos );
+           identifier.find("domain") != std::string::npos ));
+      std::cout << "isIntegralKind Identifier : " << res << std::endl;
+
+        return res;
     }
 };
 

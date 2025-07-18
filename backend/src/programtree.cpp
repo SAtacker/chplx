@@ -22,7 +22,13 @@ namespace chplx { namespace ast { namespace hpx {
 
 struct ScalarDeclarationExpressionVisitor {
     template<typename T>
-    void operator()(T const&) {}
+    void operator()(T const&) {
+       os << "unknown";
+    }
+
+    void operator()(locale_kind const& kind) {
+       os << "chplx::locale";
+    }
 
     void operator()(bool_kind const& kind) {
        os << "bool";
@@ -146,6 +152,12 @@ void ArrayDeclarationExpression::emit(std::ostream & os) const {
       if (!first) {
          first = false;
          os << ", ";
+      }
+
+      for(auto & idx : indices) {
+         if(idx.identifier == "numLocales"){
+            idx.identifier = "chplx::numLocales";
+         }
       }
 
       if(indices.size() == 2) {
@@ -578,6 +590,9 @@ void FunctionCallExpression::emit(std::ostream & os) const {
          std::string identifier_str{symbol.identifier.c_str()};
          if(symbol.identifier == "writeln") {
             identifier_str = "chplx::writeln";
+         }
+         else if (symbol.identifier == "Locales"){
+            identifier_str = "chplx::Locales";
          }
 
          for(std::size_t i = 1; i < args_sz; ++i) {
