@@ -119,7 +119,6 @@ void ScalarDeclarationLiteralExpressionVisitor::operator()(string_kind const&) {
 }
 
 void ScalarDeclarationLiteralExpressionVisitor::operator()(std::shared_ptr<array_kind> const& n)  {
-   std::cout << "ARRK" << std::endl;
 }
 
 void ScalarDeclarationLiteralExpression::emit(std::ostream & os) const {
@@ -226,7 +225,6 @@ struct ArrayDeclarationLiteralExpressionVisitor {
        os << "std::string";
     }
     void operator()(std::shared_ptr<array_kind> const& arr) {
-       std::cout << "ARRK" << std::endl;
     }
     void operator()(kind_node_type const& n) {
        // does not terminate vector declaration

@@ -176,8 +176,7 @@ struct SymbolBase {
     std::size_t scopeId;
 
     bool isIntegralKind() {
-      std::cout << "isIntegralKind Identifier : " << identifier << std::endl;
-      bool res = (kind.index() < 10 && scopeId == 0 && (
+      return (kind.index() < 10 && scopeId == 0 && (
            identifier.find("nil") != std::string::npos ||
            identifier.find("bool") != std::string::npos ||
            identifier.find("string") != std::string::npos ||
@@ -187,9 +186,6 @@ struct SymbolBase {
            identifier.find("complex") != std::string::npos ||
            identifier.find("range") != std::string::npos ||
            identifier.find("domain") != std::string::npos ));
-      std::cout << "isIntegralKind Identifier : " << res << std::endl;
-
-        return res;
     }
 };
 

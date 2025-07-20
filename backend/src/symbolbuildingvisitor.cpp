@@ -263,23 +263,8 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::Dot:
     {
-      const std::string field_name  = dynamic_cast<const Dot *>(ast)->field().str();
-      const std::string class_name = dynamic_cast<Identifier const*>(dynamic_cast<const Dot *>(ast)->receiver())->name().c_str();
-      if(field_name == "id" && class_name == "here") {
-         // // auto &
-         // std::cout << "Dot Expression: " << class_name << "." << field_name << std::endl;
-         // const std::size_t lutId = sym->get().scopeId;
-         // auto csym = symbolTable.find(lutId, class_name);
-         // if(csym) {
-         //    std::cout << "Found symbol: " << csym->identifier << std::endl;
-         //    csym->get().scopeId = symbolTable.symbolTableRef->id;
-         // }
-         // auto fsym = symbolTable.find(lutId, class_name);
-         // if(fsym) {
-         //    std::cout << "Found symbol: " << fsym->identifier << std::endl;
-         //    fsym->get().scopeId = symbolTable.symbolTableRef->id;
-         // }
-      }
+      // const std::string field_name  = dynamic_cast<const Dot *>(ast)->field().str();
+      // const std::string class_name = dynamic_cast<Identifier const*>(dynamic_cast<const Dot *>(ast)->receiver())->name().c_str();
     }
     break;
     case asttags::EmptyStmt:
@@ -293,9 +278,6 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::Identifier:
     {
        std::string identifier_str{dynamic_cast<Identifier const*>(ast)->name().c_str()};
-       std::cout << "Identifier: " << identifier_str << std::endl;
-       std::cout << "has class : " << std::holds_alternative<std::shared_ptr<class_kind>>(sym->get().kind) << std::endl;
-       std::cout << "has func : " << std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind) << std::endl;
 
        if(sym && !std::holds_alternative<std::monostate>(sym->get().kind)) {
           const std::size_t lutId = sym->get().scopeId;
@@ -1374,8 +1356,6 @@ std::cout << "BLOCK HERE" << std::endl;
            && symnode->tag() == asttags::Variable    // that is a `var …` decl
            && std::holds_alternative<std::shared_ptr<array_kind>>(
                   sym->get().kind);    // whose kind is still array
-       std::cout << "For loop: " << emitChapelLine(ast) << std::endl;
-       std::cout << "IsArrayInitFor loop: " << isArrayInitExpr << std::endl;
 
        if (std::holds_alternative<std::shared_ptr<array_kind>>(
                sym->get().kind) &&
