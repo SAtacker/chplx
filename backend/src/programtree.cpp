@@ -7,6 +7,7 @@
  * file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 #include "hpx/programtree.hpp"
+#include "hpx/utils.hpp"
 #include "chpl/uast/all-uast.h"
 #include <fmt/args.h>
 
@@ -305,10 +306,14 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
    std::size_t domcount = 0;
    std::size_t prev_idx = 0;
    for(auto & kt : kindtypes) {
-      if(std::holds_alternative<std::shared_ptr<array_kind>>(kt) &&
-         (prev_idx == 0 || prev_idx == 18)) {
-         ++domcount;
-         prev_idx = kt.index();
+      if (std::holds_alternative<std::shared_ptr<array_kind>>(kt) &&
+          (prev_idx == 0 ||
+              prev_idx ==
+                  chplx::util::detail::variant_index<kind_types,
+                      std::shared_ptr<array_kind>>()))
+      {
+          ++domcount;
+          prev_idx = kt.index();
       }
       else if(!skip) {
          std::visit(ArrayDeclarationLiteralExpressionVisitor{typelist}, kt);
