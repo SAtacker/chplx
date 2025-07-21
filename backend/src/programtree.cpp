@@ -158,6 +158,12 @@ void ArrayDeclarationExpression::emit(std::ostream & os) const {
          if(idx.identifier == "numLocales"){
             idx.identifier = "chplx::numLocales";
          }
+         if(idx.identifier == "Locales"){
+            idx.identifier = "chplx::Locales";
+         }
+         if(idx.identifier == "here"){
+            idx.identifier = "chplx::here";
+         }
       }
 
       if(indices.size() == 2) {
@@ -620,6 +626,14 @@ void VariableExpression::emit(std::ostream & os) const {
    if (ident == "numLocales")
    {
       ident = "chplx::numLocales";
+   }
+   else if (ident == "Locales")
+   {
+      ident = "chplx::Locales";
+   }
+   else if (ident == "here")
+   {
+      ident = "chplx::here";
    }
 
    os << ident;

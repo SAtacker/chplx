@@ -575,18 +575,32 @@ struct StatementVisitor {
       //auto const& rk = std::get<std::shared_ptr<range_kind>>(node->indexSet.kind);
       //auto & indices = rk->args;
 
-      os << "chplx::forLoop(chplx::Range{";
-      if(node->indexSet.size() == 1) {
-          ExprVisitor ev{os};
-          std::visit(ev, node->indexSet[0]);
+      os << "chplx::forLoop(";
+      std::string range_str = "chplx::Range{";
+      if (node->indexSet.size() == 1)
+      {
+         if (std::holds_alternative<VariableExpression>(node->indexSet[0]))
+         {
+            if (std::get<VariableExpression>(node->indexSet[0])
+                    .sym->identifier == "Locales")
+            {
+               range_str = "";
+            }
+         }
+         os << range_str;
+         ExprVisitor ev{os};
+         std::visit(ev, node->indexSet[0]);
       }
-      else if(node->indexSet.size() == 2) {
-          ExprVisitor ev{os};
-          std::visit(ev, node->indexSet[0]);
-          os << ',';
-          std::visit(ev, node->indexSet[1]);
+      else if (node->indexSet.size() == 2)
+      {
+         os << range_str;
+         ExprVisitor ev{os};
+         std::visit(ev, node->indexSet[0]);
+         os << ',';
+         std::visit(ev, node->indexSet[1]);
       }
-      else {
+      else
+      {
          assert(node->indexSet.size() < 3);
       }
 /*
@@ -609,7 +623,10 @@ struct StatementVisitor {
          }
       }
 */
-      os << "}, [&](auto " << node->iterator.identifier << ") {" << std::endl;
+      if(range_str != ""){
+         os << "}";
+      }
+      os << ", [&](auto " << node->iterator.identifier << ") {" << std::endl;
 
       ++indent;
       for(const auto& stmt : node->statements) {
@@ -631,19 +648,32 @@ struct StatementVisitor {
       //auto const& rk = std::get<std::shared_ptr<range_kind>>(node->indexSet.kind);
       //auto & indices = rk->args;
 
-      os << "chplx::forall(chplx::Range{";
-
-      if(node->indexSet.size() == 1) {
-          ExprVisitor ev{os};
-          std::visit(ev, node->indexSet[0]);
+      os << "chplx::forall(";
+      std::string range_str = "chplx::Range{";
+      if (node->indexSet.size() == 1)
+      {
+         if (std::holds_alternative<VariableExpression>(node->indexSet[0]))
+         {
+            if (std::get<VariableExpression>(node->indexSet[0])
+                    .sym->identifier == "Locales")
+            {
+               range_str = "";
+            }
+         }
+         os << range_str;
+         ExprVisitor ev{os};
+         std::visit(ev, node->indexSet[0]);
       }
-      else if(node->indexSet.size() == 2) {
-          ExprVisitor ev{os};
-          std::visit(ev, node->indexSet[0]);
-          os << ',';
-          std::visit(ev, node->indexSet[1]);
+      else if (node->indexSet.size() == 2)
+      {
+         os << range_str;
+         ExprVisitor ev{os};
+         std::visit(ev, node->indexSet[0]);
+         os << ',';
+         std::visit(ev, node->indexSet[1]);
       }
-      else {
+      else
+      {
          assert(node->indexSet.size() < 3);
       }
 /*
@@ -666,7 +696,10 @@ struct StatementVisitor {
          }
       }
 */
-      os << "}, [&](auto " << node->iterator.identifier << ") {" << std::endl;
+      if(range_str != ""){
+         os << "}";
+      }
+      os << ", [&](auto " << node->iterator.identifier << ") {" << std::endl;
 
       ++indent;
       for(const auto& stmt : node->statements) {
@@ -686,7 +719,7 @@ struct StatementVisitor {
       //auto const& rk = std::get<std::shared_ptr<range_kind>>(node->indexSet.kind);
       //auto & indices = rk->args;
 
-      os << "chplx::coforall(chplx::Range{";
+      os << "chplx::coforall(";
 /*
       if(std::holds_alternative<int_kind>(indices[0].kind)) {
          os << int_kind::value(indices[0].literal[0]);
@@ -697,21 +730,39 @@ struct StatementVisitor {
          os << int_kind::value(indices[1].literal[0]);
       }
 */
-      if(node->indexSet.size() == 1) {
-          ExprVisitor ev{os};
-          std::visit(ev, node->indexSet[0]);
+      std::string range_str = "chplx::Range{";
+      if (node->indexSet.size() == 1)
+      {
+         if (std::holds_alternative<VariableExpression>(node->indexSet[0]))
+         {
+            if (std::get<VariableExpression>(node->indexSet[0])
+                    .sym->identifier == "Locales")
+            {
+               range_str = "";
+            }
+         }
+         os << range_str;
+         ExprVisitor ev{os};
+         std::visit(ev, node->indexSet[0]);
       }
-      else if(node->indexSet.size() == 2) {
-          ExprVisitor ev{os};
-          std::visit(ev, node->indexSet[0]);
-          os << ',';
-          std::visit(ev, node->indexSet[1]);
+      else if (node->indexSet.size() == 2)
+      {
+         os << range_str;
+         ExprVisitor ev{os};
+         std::visit(ev, node->indexSet[0]);
+         os << ',';
+         std::visit(ev, node->indexSet[1]);
       }
-      else {
+      else
+      {
          assert(node->indexSet.size() < 3);
       }
 
-      os << "}, [&](auto " << node->iterator.identifier << ") {" << std::endl;
+      if(range_str != ""){
+         os << "}";
+      }
+
+      os << ", [&](auto " << node->iterator.identifier << ") {" << std::endl;
       ++indent;
       for(const auto& stmt : node->statements) {
          visit(*this, stmt);

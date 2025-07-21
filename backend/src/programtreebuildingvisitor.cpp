@@ -316,8 +316,11 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
             return true;
          }
          else {
-            std::cerr << "chplx error: Dot expression without variable or scalar declaration expression found; check\t" << emitChapelLine(ast) << std::endl << std::flush;
-         }
+            // this is the case where dot expression is used somewhere without assignment
+            cStmts->emplace_back(std::make_shared<FunctionCallExpression>(
+                FunctionCallExpression{{symbolTableRef->id}, std::move(sym), {},
+                    emitChapelLine(ast), symbolTable}));
+           }
       }
     }
     break;

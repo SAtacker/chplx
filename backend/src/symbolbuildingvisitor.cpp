@@ -1134,7 +1134,7 @@ std::cout << "ELSE\t" << identifier_str << std::endl;
             std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind);
          const bool is_if = is_func && 
             std::get<std::shared_ptr<func_kind>>(sym->get().kind)->symbolTableSignature.find("if") != std::string::npos;
-         const bool is_same_scope =
+         const bool is_same_scope = symnode != nullptr &&
             emitChapelLine(symnode) == emitChapelLine(ast);
          if(is_func && !is_if && is_same_scope) {
              std::shared_ptr<func_kind> & fk =
