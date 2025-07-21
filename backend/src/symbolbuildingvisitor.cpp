@@ -62,26 +62,14 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
    );
 
    addSymbolEntry("here",
-       Symbol{{std::make_shared<class_kind>(class_kind{{{}, "here",
-                  //  {Symbol{{std::make_shared<func_kind>(
-                  //               func_kind{{{}, "id", {}, int_kind{}}}),
-                  //      std::string{"id"}, {}, -1, false,
-                  //      symbolTable.symbolTableRef->id}}}
-                  {}
-                     }}),
+       Symbol{{std::make_shared<class_kind>(class_kind{{{}, "here", {}}}),
            std::string{"here"}, {}, -1, false,
            symbolTable.symbolTableRef->id}});
    addSymbolEntry("Locales",
-       Symbol{{std::make_shared<array_kind>(array_kind{{{}, "Locales",
-                  //  {Symbol{{std::make_shared<func_kind>(
-                  //               func_kind{{{}, "id", {}, int_kind{}}}),
-                  //      std::string{"id"}, {}, -1, false,
-                  //      symbolTable.symbolTableRef->id}}}
-                  {}
-                     }}),
+       Symbol{{std::make_shared<array_kind>(array_kind{{{}, "Locales", {}}}),
            std::string{"Locales"}, {}, -1, false,
            symbolTable.symbolTableRef->id}});
-   
+
    addSymbolEntry("locale",
        Symbol{{locale_kind{}, std::string{"locale"}, {}, -1, false, symbolTable.symbolTableRef->id}});
    // incdirs - allows users to provide include paths for header files used in `inlinecxx` 

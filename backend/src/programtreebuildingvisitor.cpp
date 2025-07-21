@@ -237,8 +237,6 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                  FunctionCallExpression{{symbolTableRef->id}, std::move(sym),
                      {}, emitChapelLine(ast), symbolTable});
              bo->statements.emplace_back(fce);
-            //  auto& nbo = std::get<std::shared_ptr<BinaryOpExpression>>(
-            //      bo->statements.back());
              curStmts.push_back(&(bo->statements));
              pushedDot = true;
              return true;
@@ -250,11 +248,9 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
              std::shared_ptr<BinaryOpExpression> bop;
              if(std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(curStmts[curStmts.size()-2]->back())){
                bop = std::get<std::shared_ptr<BinaryOpExpression>>(curStmts[curStmts.size()-2]->back());
-               // curStmts[curStmts.size()-2]->pop_back();
                auto fce = std::make_shared<FunctionCallExpression>(
                  FunctionCallExpression{{symbolTableRef->id}, std::move(sym),
                      {}, emitChapelLine(ast), symbolTable});
-               // bop->statements.pop_back();
                bop->statements.emplace_back(stmt);
                bop->statements.emplace_back(fce);
                curStmts.push_back(&(bop->statements));
@@ -431,16 +427,12 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
               auto& bo =
                   std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
 
-               
-
               bo->statements.emplace_back(
 
                   VariableExpression{std::make_shared<Symbol>(Symbol{
                       varsymInsideForLoop->kind,
                       arrayIdentifierForLoopExpression,    // This is "arr(i)"
                       {}, -1, false, symbolTableRef->id})});
-               
-              
 
               bo->statements.emplace_back(
                   VariableExpression{std::make_shared<Symbol>(*varsym)});
