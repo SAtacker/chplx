@@ -204,123 +204,148 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::Dot:
     {
-      const std::string field_name  = dynamic_cast<const Dot *>(ast)->field().str();
-      const std::string class_name = dynamic_cast<Identifier const*>(dynamic_cast<const Dot *>(ast)->receiver())->name().c_str();
-      if(field_name == "id" && class_name == "here") {
-         auto sym = Symbol{
-            {
-               std::make_shared<func_kind>(func_kind{{{}, "chplx::here.id", {}, int_kind{}}}),
-               std::string{"chplx::here.id"},
-               {},
-               -1,
-               false,
-               symbolTable.symbolTableRef->id
-            }
-         };
-         std::vector<Statement> * cStmts = curStmts.back();
-         if(cStmts->size() && std::holds_alternative<ScalarDeclarationExpression>(cStmts->back())) {
-             ScalarDeclarationExpression stmt =
-                 std::get<ScalarDeclarationExpression>(cStmts->back());
-             cStmts->pop_back();
-             cStmts->emplace_back(std::make_shared<BinaryOpExpression>(
-                 BinaryOpExpression{{{symbolTableRef->id}, "=", ast}, {}}));
-             auto& bo =
-                 std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
+    const std::string field_name = dynamic_cast<const Dot*>(ast)->field().str();
+    const std::string class_name = dynamic_cast<Identifier const*>(
+        dynamic_cast<const Dot*>(ast)->receiver())
+                                       ->name()
+                                       .c_str();
+    const std::string func_name = (class_name == "here" ? ("chplx::") : "") +
+        class_name + "." + field_name;
+    auto sym = Symbol{{std::make_shared<func_kind>(
+                           func_kind{{{}, func_name, {}, int_kind{}}}),
+        std::string{func_name}, {}, -1, false, symbolTable.symbolTableRef->id}};
+    std::vector<Statement>* cStmts = curStmts.back();
+    if (cStmts->size() &&
+        std::holds_alternative<ScalarDeclarationExpression>(cStmts->back()))
+    {
+        ScalarDeclarationExpression stmt =
+            std::get<ScalarDeclarationExpression>(cStmts->back());
+        cStmts->pop_back();
+        cStmts->emplace_back(std::make_shared<BinaryOpExpression>(
+            BinaryOpExpression{{{symbolTableRef->id}, "=", ast}, {}}));
+        auto& bo =
+            std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
 
-             bo->statements.emplace_back(
-                 std::make_shared<ScalarDeclarationExprExpression>(
-                     ScalarDeclarationExprExpression{
-                         {{stmt.scopeId}, stmt.identifier, stmt.kind,
-                             stmt.chplLine, stmt.qualifier, stmt.config},
-                         {}}));
-             auto fce = std::make_shared<FunctionCallExpression>(
-                 FunctionCallExpression{{symbolTableRef->id}, std::move(sym),
-                     {}, emitChapelLine(ast), symbolTable});
-             bo->statements.emplace_back(fce);
-             curStmts.push_back(&(bo->statements));
-             pushedDot = true;
-             return true;
-         }
-         else if(cStmts->size() && std::holds_alternative<VariableExpression>(cStmts->back())) {
-             VariableExpression stmt =
-                 std::get<VariableExpression>(cStmts->back());
-             cStmts->pop_back();
-             std::shared_ptr<BinaryOpExpression> bop;
-             if(std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(curStmts[curStmts.size()-2]->back())){
-               bop = std::get<std::shared_ptr<BinaryOpExpression>>(curStmts[curStmts.size()-2]->back());
-               auto fce = std::make_shared<FunctionCallExpression>(
-                 FunctionCallExpression{{symbolTableRef->id}, std::move(sym),
-                     {}, emitChapelLine(ast), symbolTable});
-               bop->statements.emplace_back(stmt);
-               bop->statements.emplace_back(fce);
-               curStmts.push_back(&(bop->statements));
-               pushedDot = true;
-               return true;
-             }else{
-               bop = std::make_shared<BinaryOpExpression>(
-                 BinaryOpExpression{{{symbolTableRef->id}, "=", ast}, {}});
-             }
-             cStmts->emplace_back(bop);
+        bo->statements.emplace_back(
+            std::make_shared<ScalarDeclarationExprExpression>(
+                ScalarDeclarationExprExpression{
+                    {{stmt.scopeId}, stmt.identifier, stmt.kind, stmt.chplLine,
+                        stmt.qualifier, stmt.config},
+                    {}}));
+        auto fce = std::make_shared<FunctionCallExpression>(
+            FunctionCallExpression{{symbolTableRef->id}, std::move(sym), {},
+                emitChapelLine(ast), symbolTable});
+        bo->statements.emplace_back(fce);
+        curStmts.push_back(&(bo->statements));
+        pushedDot = true;
+        return true;
+      }
+      else if (cStmts->size() &&
+          std::holds_alternative<VariableExpression>(cStmts->back()))
+      {
+          VariableExpression stmt =
+              std::get<VariableExpression>(cStmts->back());
+          cStmts->pop_back();
+          std::shared_ptr<BinaryOpExpression> bop;
+          if (std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(
+                  curStmts[curStmts.size() - 2]->back()))
+          {
+              bop = std::get<std::shared_ptr<BinaryOpExpression>>(
+                  curStmts[curStmts.size() - 2]->back());
+              auto fce = std::make_shared<FunctionCallExpression>(
+                  FunctionCallExpression{{symbolTableRef->id}, std::move(sym),
+                      {}, emitChapelLine(ast), symbolTable});
+              bop->statements.emplace_back(stmt);
+              bop->statements.emplace_back(fce);
+              curStmts.push_back(&(bop->statements));
+              pushedDot = true;
+              return true;
+          }
+          else
+          {
+              bop = std::make_shared<BinaryOpExpression>(
+                  BinaryOpExpression{{{symbolTableRef->id}, "=", ast}, {}});
+          }
+          cStmts->emplace_back(bop);
 
-             bop->statements.emplace_back(stmt);
-             auto fce = std::make_shared<FunctionCallExpression>(
-                 FunctionCallExpression{{symbolTableRef->id}, std::move(sym),
-                     {}, emitChapelLine(ast), symbolTable});
-             bop->statements.emplace_back(fce);
+          bop->statements.emplace_back(stmt);
+          auto fce = std::make_shared<FunctionCallExpression>(
+              FunctionCallExpression{{symbolTableRef->id}, std::move(sym), {},
+                  emitChapelLine(ast), symbolTable});
+          bop->statements.emplace_back(fce);
 
-             curStmts.push_back(&(bop->statements));
-             pushedDot = true;
-             return true;
-         }else if(std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(cStmts->back())){
-            auto& bop = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
-            auto fce = std::make_shared<FunctionCallExpression>(
-                 FunctionCallExpression{{symbolTableRef->id}, std::move(sym),
-                     {}, emitChapelLine(ast), symbolTable});
-            std::vector<Statement> bop_stmts_new;
-            for(auto & stmt : bop->statements) {
-               if(std::holds_alternative<VariableExpression>(stmt)) {
-                  auto & varExpr = std::get<VariableExpression>(stmt);
+          curStmts.push_back(&(bop->statements));
+          pushedDot = true;
+          return true;
+      }
+      else if (std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(
+                   cStmts->back()))
+      {
+          auto& bop =
+              std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
+          auto fce = std::make_shared<FunctionCallExpression>(
+              FunctionCallExpression{{symbolTableRef->id}, std::move(sym), {},
+                  emitChapelLine(ast), symbolTable});
+          std::vector<Statement> bop_stmts_new;
+          for (auto& stmt : bop->statements)
+          {
+              if (std::holds_alternative<VariableExpression>(stmt))
+              {
+                  auto& varExpr = std::get<VariableExpression>(stmt);
                   bop_stmts_new.emplace_back(varExpr);
                   break;
-               }
-            }
-            bop_stmts_new.emplace_back(fce);
-            bop->statements = std::move(bop_stmts_new);
-            curStmts.push_back(&(bop->statements));
-            pushedDot = true;
-            return true;
+              }
+          }
+          bop_stmts_new.emplace_back(fce);
+          bop->statements = std::move(bop_stmts_new);
+          curStmts.push_back(&(bop->statements));
+          pushedDot = true;
+          return true;
+      }
+      else if (curStmts.size() > 1 &&
+          std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(
+              curStmts[curStmts.size() - 2]->back()))
+      {
+          auto& bop = std::get<std::shared_ptr<BinaryOpExpression>>(
+              curStmts[curStmts.size() - 2]->back());
+          auto bop_sym = bop->statements.back();
+          auto& bop_stmts = bop->statements;
+          if (std::holds_alternative<VariableExpression>(bop->statements[0]))
+          {
+              auto& varExpr = std::get<VariableExpression>(bop->statements[0]);
+          }
+          return true;
+      }
+      else if (cStmts->size() &&
+          std::holds_alternative<
+              std::shared_ptr<ScalarDeclarationExprExpression>>(cStmts->back()))
+      {
+          auto& sde =
+              std::get<std::shared_ptr<ScalarDeclarationExprExpression>>(
+                  cStmts->back());
+          cStmts->pop_back();
+          cStmts->emplace_back(std::make_shared<BinaryOpExpression>(
+              BinaryOpExpression{{{symbolTableRef->id}, "=", ast}, {}}));
+          auto& bo =
+              std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
 
-         }else if(curStmts.size() > 1 && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(curStmts[curStmts.size()-2]->back())) {
-            auto & bop = std::get<std::shared_ptr<BinaryOpExpression>>(curStmts[curStmts.size()-2]->back());
-            auto bop_sym = bop->statements.back();
-            auto &bop_stmts = bop->statements;
-            if(std::holds_alternative<VariableExpression>(bop->statements[0])) {
-               auto & varExpr = std::get<VariableExpression>(bop->statements[0]);
-            }
-            return true;
-         }else if(cStmts->size() && std::holds_alternative<std::shared_ptr<ScalarDeclarationExprExpression>>(cStmts->back())) {
-            auto & sde = std::get<std::shared_ptr<ScalarDeclarationExprExpression>>(cStmts->back());
-            cStmts->pop_back();
-            cStmts->emplace_back(std::make_shared<BinaryOpExpression>(
-                BinaryOpExpression{{{symbolTableRef->id}, "=", ast}, {}}));
-            auto& bo =
-                std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
-
-            bo->statements.emplace_back(sde);
-            auto fce = std::make_shared<FunctionCallExpression>(
-                FunctionCallExpression{{symbolTableRef->id}, std::move(sym),
-                    {}, emitChapelLine(ast), symbolTable});
-            bo->statements.emplace_back(fce);
-            curStmts.push_back(&(bo->statements));
-            pushedDot = true;
-            return true;
-         }
-         else {
-            // this is the case where dot expression is used somewhere without assignment
-            cStmts->emplace_back(std::make_shared<FunctionCallExpression>(
-                FunctionCallExpression{{symbolTableRef->id}, std::move(sym), {},
-                    emitChapelLine(ast), symbolTable}));
-           }
+          bo->statements.emplace_back(sde);
+          auto fce = std::make_shared<FunctionCallExpression>(
+              FunctionCallExpression{{symbolTableRef->id}, std::move(sym), {},
+                  emitChapelLine(ast), symbolTable});
+          bo->statements.emplace_back(fce);
+          curStmts.push_back(&(bo->statements));
+          pushedDot = true;
+          return true;
+      }
+      else
+      {
+          // this is the case where dot expression is used somewhere without assignment
+          cStmts->emplace_back(std::make_shared<FunctionCallExpression>(
+              FunctionCallExpression{{symbolTableRef->id}, std::move(sym), {},
+                  emitChapelLine(ast), symbolTable}));
+          pushedDot = true;
+          return true;
       }
     }
     break;
@@ -368,7 +393,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
               }
            }
            else {
-               if(varsym->identifier == "here") {
+               if(pushedDot) {
                   return true;
                }
               cStmts->emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
@@ -578,7 +603,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
           std::optional<Symbol> varsym =
              symbolTable.find(symbolTableRef->id, identifier);
 
-          if(identifier == "here") {
+          if(pushedDot) {
              return true;
           }
 

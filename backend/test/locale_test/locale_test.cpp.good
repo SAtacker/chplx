@@ -62,6 +62,21 @@ namespace locale_test {
 #line 32 "locale_test.chpl"
             chplx::writeln("This locale ID is: ", chplx::here.id());
         });
+#line 35 "locale_test.chpl"
+        chplx::coforall(chplx::Locales, [&](auto loc) {
+#line 36 "locale_test.chpl"
+            chplx::writeln("This locale ID is: ", loc.id());
+        });
+#line 39 "locale_test.chpl"
+        chplx::forall(chplx::Locales, [&](auto loc) {
+#line 40 "locale_test.chpl"
+            chplx::writeln("This locale ID is: ", loc.id());
+        });
+#line 43 "locale_test.chpl"
+        chplx::forLoop(chplx::Locales, [&](auto loc) {
+#line 44 "locale_test.chpl"
+            chplx::writeln("This locale ID is: ", loc.id());
+        });
 
         delete exec;
     }

@@ -31,3 +31,15 @@ for loc in Locales {
 coforall loc in Locales {
    writeln("This locale ID is: ", here.id);
 }
+
+coforall loc in Locales {
+   writeln("This locale ID is: ", loc.id);
+}
+
+forall loc in Locales {
+   writeln("This locale ID is: ", loc.id);
+}
+
+for loc in Locales {
+   writeln("This locale ID is: ", loc.id);
+}
