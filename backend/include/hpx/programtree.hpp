@@ -122,6 +122,7 @@ struct TupleDeclarationExprExpression;
 struct RecordDeclarationExpression;
 struct ClassDeclarationExpression;
 struct ModuleDeclarationExpression;
+struct OnExpression;
 
 using Statement = std::variant<
    std::monostate,
@@ -149,6 +150,7 @@ using Statement = std::variant<
    std::shared_ptr<ForLoopExpression>,
    std::shared_ptr<ForallLoopExpression>,
    std::shared_ptr<CoforallLoopExpression>,
+   std::shared_ptr<OnExpression>,
    std::shared_ptr<RecordDeclarationExpression>,
    std::shared_ptr<ClassDeclarationExpression>,
    std::shared_ptr<ModuleDeclarationExpression>
@@ -266,6 +268,16 @@ struct CoforallLoopExpression : public ScopeExpression {
    Symbol iterator;
    //Symbol indexSet;
    std::vector<Statement> indexSet;
+   std::vector<Statement> statements;
+   std::string chplLine;
+
+   void emit(std::ostream & os) const;
+};
+
+struct OnExpression : public ScopeExpression {
+   Symbol symbol;
+   Symbol OnLocale;
+   std::vector<Statement> OnLocaleVarExpr;
    std::vector<Statement> statements;
    std::string chplLine;
 

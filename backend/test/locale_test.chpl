@@ -43,3 +43,26 @@ forall loc in Locales {
 for loc in Locales {
    writeln("This locale ID is: ", loc.id);
 }
+
+
+for loc in Locales do
+  on loc do
+    writeln("hello locale ", loc.id);
+
+for loc in Locales do
+  on loc {
+    writeln("hello locale ", loc.id);
+  }
+
+coforall loc in Locales { 
+   on loc {
+      writeln("hello locale ", loc.id); 
+   } 
+}
+
+on b {
+   writeln("This locale ID is: ", here.id);
+}
+
+on b do
+   writeln("This locale ID is: ", here.id, " b is ", b);

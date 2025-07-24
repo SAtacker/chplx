@@ -771,6 +771,30 @@ struct StatementVisitor {
       emitIndent();
       os << "});" << std::endl;
    }
+   void operator()(std::shared_ptr<OnExpression> const& node) {
+      if(printChplLine) {
+         emitIndent();
+         os << node->chplLine;
+      }
+      emitIndent();
+      assert(node->OnLocaleVarExpr.size() == 1);
+      os << "chplx::on(";
+      if (!std::holds_alternative<VariableExpression>(node->OnLocaleVarExpr[0]))
+      {
+         assert(false && "OnExpression indexSet should be a VariableExpression");
+      }
+      ExprVisitor ev{os};
+      std::visit(ev, node->OnLocaleVarExpr[0]);
+
+      os << ", [](auto " << node->OnLocale.identifier << ") {" << std::endl;
+      ++indent;
+      for(const auto& stmt : node->statements) {
+         visit(*this, stmt);
+      }
+      --indent;
+      emitIndent();
+      os << "}, " << node->OnLocale.identifier << ");" << std::endl;
+   }
    void operator()(std::shared_ptr<ReturnExpression> const& node) {
       emitIndent();
       os << node->chplLine;

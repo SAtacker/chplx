@@ -1228,6 +1228,35 @@ std::cout << "BLOCK HERE" << std::endl;
     case asttags::Manage:
     break;
     case asttags::On:
+    {
+        symstack.emplace_back(
+          Symbol{{
+             std::make_shared<func_kind>(func_kind{{
+                symbolTable.symbolTableRef->id, {}, {}, {}}}),
+             std::string{"on_" + emitChapelLine(ast)},
+             {}, -1, false, symbolTable.symbolTableRef->id
+          }});
+
+       std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
+       const std::size_t parScope = symbolTable.symbolTableRef->id;
+
+       symbolTable.pushScope();
+       sym.reset();
+       sym = symstack.back();
+
+       std::shared_ptr<func_kind> & fk = 
+          std::get<std::shared_ptr<func_kind>>(sym->get().kind);
+
+       fk->symbolTableSignature = sym->get().identifier;
+       // func_kind.lutId = the scope where the function's symboltable references
+       //
+       fk->lutId = symbolTable.symbolTableRef->id;
+
+       symbolTable.parentSymbolTableId = parScope;
+       symbolTable.symbolTableRef->parent = prevSymbolTableRef;
+
+       symnode = const_cast<uast::AstNode*>(ast);
+    }
     break;
     case asttags::Serial:
     break;
@@ -1345,9 +1374,7 @@ std::cout << "BLOCK HERE" << std::endl;
            && std::holds_alternative<std::shared_ptr<array_kind>>(
                   sym->get().kind);    // whose kind is still array
 
-       if (std::holds_alternative<std::shared_ptr<array_kind>>(
-               sym->get().kind) &&
-           isArrayInitExpr)
+       if (isArrayInitExpr)
        {
           // This is a for-loop expression used to initialize an array
           std::shared_ptr<array_kind>& arrk =
@@ -1839,6 +1866,20 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
     case asttags::Manage:
     break;
     case asttags::On:
+    {
+          std::shared_ptr<func_kind> & fk =
+             std::get<std::shared_ptr<func_kind>>(sym->get().kind);
+
+          symbolTable.addEntry(sym->get().scopeId, fk->symbolTableSignature, *sym);
+
+          sym.reset();
+          symnode = nullptr;
+
+          symbolTable.popScope();
+
+          symstack.pop_back();
+          sym = symstack.back();
+    }
     break;
     case asttags::Serial:
     break;

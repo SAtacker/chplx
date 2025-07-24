@@ -77,6 +77,56 @@ namespace locale_test {
 #line 44 "locale_test.chpl"
             chplx::writeln("This locale ID is: ", loc.id());
         });
+#line 48 "locale_test.chpl"
+        chplx::forLoop(chplx::Locales, [&](auto loc) {
+#line 49 "locale_test.chpl"
+            chplx::on(
+                loc,
+                [](auto loc) {
+#line 50 "locale_test.chpl"
+                    chplx::writeln("hello locale ", loc.id());
+                },
+                loc);
+        });
+#line 52 "locale_test.chpl"
+        chplx::forLoop(chplx::Locales, [&](auto loc) {
+#line 53 "locale_test.chpl"
+            chplx::on(
+                loc,
+                [](auto loc) {
+#line 54 "locale_test.chpl"
+                    chplx::writeln("hello locale ", loc.id());
+                },
+                loc);
+        });
+#line 57 "locale_test.chpl"
+        chplx::coforall(chplx::Locales, [&](auto loc) {
+#line 58 "locale_test.chpl"
+            chplx::on(
+                loc,
+                [](auto loc) {
+#line 59 "locale_test.chpl"
+                    chplx::writeln("hello locale ", loc.id());
+                },
+                loc);
+        });
+#line 63 "locale_test.chpl"
+        chplx::on(
+            b,
+            [](auto b) {
+#line 64 "locale_test.chpl"
+                chplx::writeln("This locale ID is: ", chplx::here.id());
+            },
+            b);
+#line 67 "locale_test.chpl"
+        chplx::on(
+            b,
+            [](auto b) {
+#line 68 "locale_test.chpl"
+                chplx::writeln(
+                    "This locale ID is: ", chplx::here.id(), " b is ", b);
+            },
+            b);
 
         delete exec;
     }
