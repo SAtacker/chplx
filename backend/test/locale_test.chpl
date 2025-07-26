@@ -66,3 +66,18 @@ on b {
 
 on b do
    writeln("This locale ID is: ", here.id, " b is ", b);
+
+
+var x1: int = Locales[1 % numLocales];
+var z1: int = 4;
+var loc1 : int = Locales[0];
+on x1 {
+    var y1 = 3;
+    writeln("From locale ", here.id, ", x is: ", x1.id, " and y is: ", y1);
+    
+    on loc1 {
+      writeln("From locale 0, x is: ", x1.id, " and y is: ", y1);
+    }
+}
+writeln();
+

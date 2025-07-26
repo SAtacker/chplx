@@ -138,7 +138,6 @@ using Statement = std::variant<
    std::shared_ptr<TupleDeclarationExprExpression>,
    LiteralExpression,
    VariableExpression,
-   OpExpression,
    std::shared_ptr<UnaryOpExpression>,
    std::shared_ptr<BinaryOpExpression>,
    std::shared_ptr<TernaryOpExpression>,
@@ -276,7 +275,7 @@ struct CoforallLoopExpression : public ScopeExpression {
 
 struct OnExpression : public ScopeExpression {
    Symbol symbol;
-   Symbol OnLocale;
+   std::optional<Symbol> OnLocale;
    std::vector<Statement> OnLocaleVarExpr;
    std::vector<Statement> statements;
    std::string chplLine;

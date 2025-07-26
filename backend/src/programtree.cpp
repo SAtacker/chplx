@@ -142,7 +142,8 @@ void ArrayDeclarationExpression::emit(std::ostream & os) const {
    os << "chplx::Array<";
    std::visit(ScalarDeclarationExpressionVisitor{os}, akref->retKind);
 
-   const auto & rngs= std::get<std::shared_ptr<domain_kind>>(akref->args[0].kind)->args;
+   const auto & rngs= akref->args.size() ? std::get<std::shared_ptr<domain_kind>>(akref->args[0].kind)->args : 
+      std::vector<Symbol>{};
    os << ", chplx::Domain<" << rngs.size() << "> > " << identifier << "(";
 
    bool first = true;
@@ -593,7 +594,11 @@ void FunctionCallExpression::emit(std::ostream & os) const {
              store.push_back(v.os.str());
           }
           auto inside_par = fmt::vformat(fn_fmt_str, store);
-          os << v.os.str()  << '(' << inside_par << ')';
+          std::string fn_call{v.os.str()};
+          if(fn_call == "Locales"){
+            fn_call = "chplx::Locales";
+          }
+          os << fn_call << '(' << inside_par << ')';
       }
       else {
          std::string identifier_str{symbol.identifier.c_str()};

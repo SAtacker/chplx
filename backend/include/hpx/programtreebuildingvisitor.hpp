@@ -55,6 +55,8 @@ struct ProgramTreeBuildingVisitor {
    std::deque<std::optional<Symbol>> pendingArrayForLoopSymbols;
    std::map<std::string, bool> pendingArrayForLoopSymbolsMap;
    
+   std::vector<std::shared_ptr<OnExpression>> onExprStack;
+   
    bool pushedDot = false;
 
    static std::unordered_map<std::string, int> operatorEncoder;

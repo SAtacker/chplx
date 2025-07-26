@@ -774,6 +774,8 @@ std::cout << "ELSE\t" << identifier_str << std::endl;
         )) {
            const FnCall* fc = dynamic_cast<const FnCall*>(ast);
            std::string identifier{dynamic_cast<const Identifier*>(fc->calledExpression())->name().c_str()};
+           std::cout << "FnCall Identifier:\t" << identifier << std::endl;
+           std::cout << "sym->get().kind:\t" << sym->get().kind.index() << std::endl;
 
            auto rsym =
               symbolTable.findPrefix(symbolTable.symbolTableRef->id, identifier);
@@ -792,6 +794,7 @@ std::cout << "ELSE\t" << identifier_str << std::endl;
 
               // assign variable the return value of the function...
               //
+              std::cout << "Itr kind "<<itr->second.kind.index()<<std::endl;
               if(itrstr.size() >= identifier.size() &&
                  itrstr == identifier &&
                  0 < itr->second.kind.index() && 
@@ -799,10 +802,12 @@ std::cout << "ELSE\t" << identifier_str << std::endl;
                  !std::holds_alternative<std::shared_ptr<tuple_kind>>(sym->get().kind) &&
                  std::holds_alternative<std::shared_ptr<func_kind>>(itr->second.kind)
               ) {
+               std::cout << "805\n";
                  sym->get().kind = std::get<std::shared_ptr<func_kind>>(itr->second.kind)->retKind;
                  break;
               }
               else if(std::holds_alternative<std::shared_ptr<array_kind>>(sym->get().kind)) {
+               std::cout << "810\n";
                  std::shared_ptr<array_kind> & symref =
                     std::get<std::shared_ptr<array_kind>>(sym->get().kind);
 
@@ -828,7 +833,10 @@ std::cout << "ELSE\t" << identifier_str << std::endl;
                  break;
               }
               else if(std::holds_alternative<std::monostate>(sym->get().kind) &&
-                      std::holds_alternative<std::shared_ptr<tuple_kind>>(itr->second.kind)) {
+                      std::holds_alternative<std::shared_ptr<tuple_kind>>(itr->second.kind)
+                     && std::holds_alternative<std::shared_ptr<kind_node_type>>(
+                        std::get<std::shared_ptr<tuple_kind>>(itr->second.kind)->retKind)) {
+               std::cout << "837\n";
                  assert(0 < fc->numActuals());
                  const AstNode* idx = fc->actual(0);
                  assert(idx->tag() == asttags::IntLiteral);
@@ -852,6 +860,7 @@ std::cout << "ELSE\t" << identifier_str << std::endl;
            }
 
            if(std::holds_alternative<nil_kind>(sym->get().kind)) {
+               std::cout << "860\n";
               sym->get().kind = expr_kind{};
            }
         }
@@ -1134,6 +1143,8 @@ std::cout << "ELSE\t" << identifier_str << std::endl;
             std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind);
          const bool is_if = is_func && 
             std::get<std::shared_ptr<func_kind>>(sym->get().kind)->symbolTableSignature.find("if") != std::string::npos;
+         const bool is_else = is_func && 
+            std::get<std::shared_ptr<func_kind>>(sym->get().kind)->symbolTableSignature.find("else") != std::string::npos;
          const bool is_same_scope = symnode != nullptr &&
             emitChapelLine(symnode) == emitChapelLine(ast);
          if(is_func && !is_if && is_same_scope) {
@@ -1187,13 +1198,7 @@ std::cout << "ELSE\t" << identifier_str << std::endl;
             symbolTable.symbolTableRef->parent = prevSymbolTableRef;
             symnode = const_cast<uast::AstNode*>(ast);
          }
-/*
-         else {
-std::cout << "BLOCK HERE" << std::endl;
-         }
-*/
-       }
-       else {
+          else if(is_func && is_else && !is_same_scope) {
           symstack.emplace_back(
              Symbol{{
                 std::make_shared<func_kind>(func_kind{{
@@ -1218,7 +1223,14 @@ std::cout << "BLOCK HERE" << std::endl;
 
           symbolTable.parentSymbolTableId = parScope;
           symbolTable.symbolTableRef->parent = prevSymbolTableRef;
+         }
+/*
+         else {
+std::cout << "BLOCK HERE" << std::endl;
+         }
+*/
        }
+      
     }
     break;
     case asttags::Defer:
@@ -1916,6 +1928,7 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
     break;
     case asttags::Block:
     {
+      std::cout <<  sym->get().identifier << std::endl;
        if(sym) {
           if(std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind)) {
              auto & fk = std::get<std::shared_ptr<func_kind>>(sym->get().kind);

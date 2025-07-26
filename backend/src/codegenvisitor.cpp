@@ -786,14 +786,14 @@ struct StatementVisitor {
       ExprVisitor ev{os};
       std::visit(ev, node->OnLocaleVarExpr[0]);
 
-      os << ", [](auto " << node->OnLocale.identifier << ") {" << std::endl;
+      os << ", [](auto " << node->OnLocale->identifier << ") {" << std::endl;
       ++indent;
       for(const auto& stmt : node->statements) {
          visit(*this, stmt);
       }
       --indent;
       emitIndent();
-      os << "}, " << node->OnLocale.identifier << ");" << std::endl;
+      os << "}, " << node->OnLocale->identifier << ");" << std::endl;
    }
    void operator()(std::shared_ptr<ReturnExpression> const& node) {
       emitIndent();
