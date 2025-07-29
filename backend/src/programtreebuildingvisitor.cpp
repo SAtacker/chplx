@@ -11,6 +11,7 @@
 #include "hpx/utils.hpp"
 #include "chpl/uast/all-uast.h"
 
+#include <system_error>
 #include <variant>
 #include <fstream>
 #include <cctype>
@@ -364,6 +365,11 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        const bool cStmtsnz = 0 < cStmts->size();
        std::string identifier{dynamic_cast<Identifier const*>(ast)->name().c_str()};
 
+       std::cout << "Identifier: " << identifier << std::endl;
+       if(curStmts.size()>1){
+         std::cout << "CurStmts Kind: " << curStmts[curStmts.size()-2]->back().index() << std::endl;
+       }
+
        if (1 < curStmts.size() &&
            0 < curStmts[curStmts.size()-2]->size() &&
            std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
@@ -394,6 +400,20 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
               }
            }
            else {
+              std::cout << "403 Found Symbol: " << varsym->identifier
+                        << " in scope: " << varsym->scopeId << std::endl;
+              std::cout << "Scope ID: " << symbolTable.symbolTableRef->id
+                        << "IsInsideOn: " << isInsideOn << std::endl;
+              if(isInsideOn && varsym->scopeId <= isInsideOn) {
+                 std::cout << "407 Adding OnLocaleVarsUsedInExpr : " << identifier
+                           << " to current statements" << std::endl;
+
+                 std::cout << "Scope ID: " << varsym->scopeId
+                           << " SymbolTableRef ID: " << symbolTable.symbolTableRef->id
+                           << " inssideOn counter ID: " << isInsideOn
+                           << std::endl;
+                 currentOnExpr->OnLocaleVarsUsedInExpr.emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
+              }
                if(pushedDot) {
                   return true;
                }
@@ -608,7 +628,6 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                symbolTable.find(symbolTableRef->id, identifier);
            if (varsym)
            {
-              varsym->scopeId = symbolTable.symbolTableRef->id;
               if (one->OnLocaleVarExpr.size() >= 1)
               {
                  std::cout << "Hello " << identifier << std::endl;
@@ -619,20 +638,52 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                  {
                     std::cout << "Adding to function call expression "
                               << identifier << std::endl;
+                    varsym->scopeId = symbolTable.symbolTableRef->id;
+
                     std::shared_ptr<FunctionCallExpression>& fce =
                         std::get<std::shared_ptr<FunctionCallExpression>>(
                             cStmts->back());
                     fce->arguments.push_back(
                         VariableExpression{std::make_shared<Symbol>(*varsym)});
-                     std::cout << "Function call: " << fce->symbol.identifier
-                               << std::endl;
+                    //   if (!varsym->isIntegralKind())
+                    //       one->OnLocaleVarsUsedInExpr.emplace_back(
+                    //           VariableExpression{
+                    //               std::make_shared<Symbol>(*varsym)});
+                    std::cout << "Function call: " << fce->symbol.identifier
+                              << std::endl;
                     return true;
                  }
                  cStmts->emplace_back(
                      VariableExpression{std::make_shared<Symbol>(*varsym)});
+                 //   if (!varsym->isIntegralKind()){
+                 //   one->OnLocaleVarsUsedInExpr.emplace_back(
+                 //       VariableExpression{std::make_shared<Symbol>(*varsym)});
+                 //    }else{
+                 //       std::cout << "Skipping integral kind variable: "
+                 //                 << identifier << std::endl;
+                 //    }
                  return true;
               }
-               std::cout << "Byee " << identifier << std::endl;
+              std::cout << "Byee " << identifier << std::endl;
+
+              if (isInsideOn && isInsideOn >= varsym->scopeId &&
+                  !std::holds_alternative<std::shared_ptr<func_kind>>(
+                      varsym->kind))
+              {
+                 std::cout << "672 Adding OnLocaleVarsUsedInExpr : "
+                           << identifier << "Kind: " << varsym->kind.index()
+                           << " to current statements" << std::endl;
+
+                 std::cout << "Scope ID: " << isInsideOn
+                           << " SymbolTableRef ID: " << symbolTableRef->id
+                           << " SymbolTableRef ID: "
+                           << symbolTable.symbolTableRef->id
+                           << " varsym ID: " << varsym->scopeId << std::endl;
+                 currentOnExpr->OnLocaleVarsUsedInExpr.emplace_back(
+                     VariableExpression{std::make_shared<Symbol>(*varsym)});
+              }
+
+              varsym->scopeId = symbolTable.symbolTableRef->id;
 
               one->OnLocale = *varsym;
               one->OnLocaleVarExpr.emplace_back(
@@ -687,6 +738,32 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
               // possible function redefinition
               // for example:
               // if here.id is used in a function then it will generate chplx::here.id(), here
+              if (varsym && isInsideOn && isInsideOn >= varsym->scopeId &&
+                  !std::holds_alternative<std::shared_ptr<func_kind>>(
+                      varsym->kind) && varsym->identifier != "here")
+              {
+                 std::cout << "734 Adding OnLocaleVarsUsedInExpr : "
+                           << identifier << "Kind: " << varsym->kind.index()
+                           << " to current statements" << std::endl;
+
+                 std::cout << "Scope ID: " << isInsideOn
+                           << " SymbolTableRef ID: " << symbolTableRef->id
+                           << " SymbolTableRef ID: "
+                           << symbolTable.symbolTableRef->id
+                           << " varsym ID: " << varsym->scopeId << std::endl;
+                 currentOnExpr->OnLocaleVarsUsedInExpr.emplace_back(
+                     VariableExpression{std::make_shared<Symbol>(*varsym)});
+              }
+              else if (varsym &&
+                  !std::holds_alternative<std::shared_ptr<func_kind>>(
+                      varsym->kind) &&
+                  varsym->identifier != "here")
+              {
+                 std::cout << "742 Skipping OnLocaleVarsUsedInExpr : "
+                           << identifier << " isInsideOn: " << isInsideOn
+                           << " varsym scope ID: " << varsym->scopeId
+                           << std::endl;
+              }
               if (fce->symbol.identifier.find(identifier + ".") !=
                   std::string::npos)
               {
@@ -697,7 +774,38 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
           if(varsym) {
                if (!varsym->isIntegralKind())
                {
-                 varsym->kind = locale_kind{};
+                  std::cout << "Adding variable: " << identifier
+                            << " to current statements" << std::endl;
+                  if(isInsideOn){
+                     std::cout << "On Scope " << currentOnExpr->scopeId << " varssym scope ID: " << varsym->scopeId
+                              << " isInsideOn: " << isInsideOn << " symbol scope ID: " << symbolTable.symbolTableRef->id << std::endl;
+                  }
+                  if (isInsideOn && !std::holds_alternative<std::shared_ptr<func_kind>>(
+                           varsym->kind))
+                  {
+                     std::cout
+                           << "734 Adding OnLocaleVarsUsedInExpr : " << identifier
+                           << "Kind: " << varsym->kind.index()
+                           << " to current statements" << std::endl;
+
+                     std::cout << "Scope ID: " << isInsideOn
+                                 << " SymbolTableRef ID: " << symbolTableRef->id
+                                 << " SymbolTableRef ID: " << symbolTable.symbolTableRef->id
+                                 << " varsym ID: " << varsym->scopeId
+                                 << std::endl;
+                     currentOnExpr->OnLocaleVarsUsedInExpr.emplace_back(
+                           VariableExpression{std::make_shared<Symbol>(*varsym)});
+                  }
+                  else if (varsym &&
+                      !std::holds_alternative<std::shared_ptr<func_kind>>(
+                          varsym->kind) &&
+                      varsym->identifier != "here")
+                  {
+                     std::cout << "784 Skipping OnLocaleVarsUsedInExpr : "
+                               << identifier << " isInsideOn: " << isInsideOn
+                               << " varsym scope ID: " << varsym->scopeId
+                               << std::endl;
+                  }
                  varsym->scopeId = symbolTable.symbolTableRef->id;
                  cStmts->emplace_back(
                      VariableExpression{std::make_shared<Symbol>(*varsym)});
@@ -2138,6 +2246,25 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                    );
                 }
                 else {
+                   std::cout  << "2229 Identifier: " << identifier << std::endl;
+                   std::cout << "Scope : " << symbolTableRef->id << std::endl;
+                   std::cout << "Var scope: " << varsym->scopeId << std::endl;
+                   std::cout << "OnIndex scope: " << isInsideOn << std::endl;
+                   std::cout << "Kind: " << varsym->kind.index() << std::endl;
+                   if (isInsideOn && !varsym->isIntegralKind() &&
+                       varsym->scopeId < symbolTable.symbolTableRef->id && varsym->scopeId < isInsideOn)
+                   {
+                       std::cout << "2184 Adding OnLocaleVarsUsedInExpr for: "
+                                 << identifier << std::endl;
+                       std::cout << "Scope : " << symbolTableRef->id
+                                 << std::endl;
+                       std::cout << "Var scope: " << varsym->scopeId
+                                 << std::endl;
+                       currentOnExpr->OnLocaleVarsUsedInExpr.emplace_back(
+                           VariableExpression{std::make_shared<Symbol>(
+                               Symbol{varsym->kind, identifier, {}, -1, false,
+                                   symbolTableRef->id})});
+                   }
                    std::visit(
                       VariableVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ctx, ast},
                       varsym->kind
@@ -2246,6 +2373,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
           symbolTable.find(symbolTableRef->id, identifier);
 
        if(varsym.has_value() && std::holds_alternative<std::shared_ptr<func_kind>>(varsym->kind)) {
+          ++isInsideOn;
           std::vector<Statement> * cStmts = curStmts.back();
 
           std::shared_ptr<func_kind> & fk = std::get<std::shared_ptr<func_kind>>(varsym->kind);
@@ -2253,12 +2381,13 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
 
           cStmts->emplace_back(
              std::make_shared<OnExpression>(
-                OnExpression{{{fk->lutId}, ast, {}}, *varsym, {}, {}, {}, emitChapelLine(ast)}
+                OnExpression{{{fk->lutId}, ast, {}}, *varsym, {}, {}, {}, {}, emitChapelLine(ast)}
           ));
 
           auto fndecl = std::get<std::shared_ptr<OnExpression>>(cStmts->back());
           onExprStack.push_back(fndecl);
           curStmts.emplace_back(&(fndecl->statements));
+          currentOnExpr = onExprStack.back();
        }
     }
     break;
@@ -2901,6 +3030,54 @@ void ProgramTreeBuildingVisitor::exit(const uast::AstNode * ast) {
       else
       {
          symbolTableRef = symbolTable.lut[0];
+      }
+      --isInsideOn;
+
+      for (auto& var_ : onExpr->OnLocaleVarsUsedInExpr)
+      {
+         auto var = std::get<VariableExpression>(var_);
+         std::cout << "Scope of var: " << var.sym->identifier << " is "
+                   << var.sym->scopeId
+                   << "  Current scope: " << currentOnExpr->scopeId
+                   << "  symboltableref scope: "
+                   << symbolTable.symbolTableRef->id
+                   << " OnIndex scope: " << isInsideOn << std::endl;
+      }
+
+      if (!onExprStack.size())
+      {
+         currentOnExpr = nullptr;
+         assert(isInsideOn == 0);
+      }
+      else
+      {
+         auto prev_on_locale_vars = currentOnExpr->OnLocaleVarsUsedInExpr;
+         
+         currentOnExpr = onExprStack.back();
+         std::copy(prev_on_locale_vars.begin(), prev_on_locale_vars.end(),
+             std::back_inserter(currentOnExpr->OnLocaleVarsUsedInExpr));
+         std::cout
+             << "*********************************************************\n";
+         currentOnExpr->OnLocaleVarsUsedInExpr.erase(
+             std::remove_if(currentOnExpr->OnLocaleVarsUsedInExpr.begin(),
+                 currentOnExpr->OnLocaleVarsUsedInExpr.end(),
+                 [&](auto& var_) {
+                     auto var = std::get<VariableExpression>(var_);
+                     return var.sym->scopeId >= currentOnExpr->scopeId;
+                 }),
+             currentOnExpr->OnLocaleVarsUsedInExpr.end());
+         for (auto& var_ : currentOnExpr->OnLocaleVarsUsedInExpr)
+         {
+             auto var = std::get<VariableExpression>(var_);
+             std::cout << "Scope of var: " << var.sym->identifier << " is "
+                       << var.sym->scopeId
+                       << "  Current scope: " << currentOnExpr->scopeId
+                       << "  symboltableref scope: "
+                       << symbolTable.symbolTableRef->id
+                       << " OnIndex scope: " << isInsideOn << std::endl;
+         }
+         std::cout << "****************************************************"
+                      "*****\n";
       }
     }
     break;

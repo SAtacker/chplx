@@ -277,6 +277,7 @@ struct OnExpression : public ScopeExpression {
    Symbol symbol;
    std::optional<Symbol> OnLocale;
    std::vector<Statement> OnLocaleVarExpr;
+   std::vector<Statement> OnLocaleVarsUsedInExpr;
    std::vector<Statement> statements;
    std::string chplLine;
 

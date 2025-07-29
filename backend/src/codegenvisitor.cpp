@@ -786,14 +786,68 @@ struct StatementVisitor {
       ExprVisitor ev{os};
       std::visit(ev, node->OnLocaleVarExpr[0]);
 
-      os << ", [](auto " << node->OnLocale->identifier << ") {" << std::endl;
+      os << ", [](auto " << node->OnLocale->identifier ;
+      if (node->OnLocaleVarsUsedInExpr.size() > 0)
+      {
+         std::cout << "OnExpression OnLocaleVarsUsedInExpr size: "
+                   << node->OnLocaleVarsUsedInExpr.size() << std::endl;
+         std::map<std::string, bool> printed_vars;
+         printed_vars[node->OnLocale->identifier] = true;
+         for (std::size_t i = 0; i < node->OnLocaleVarsUsedInExpr.size(); ++i)
+         {
+            
+            if (!std::holds_alternative<VariableExpression>(
+                    node->OnLocaleVarsUsedInExpr[i]))
+            {
+               assert(false &&
+                   "OnExpression OnLocaleVarsUsedInExpr should be a "
+                   "VariableExpression");
+            }
+            if(printed_vars.find(std::get<VariableExpression>(node->OnLocaleVarsUsedInExpr[i]).sym->identifier) != printed_vars.end()) {
+               continue; // already printed
+            }
+            printed_vars[std::get<VariableExpression>(node->OnLocaleVarsUsedInExpr[i]).sym->identifier] = true;
+
+            os << ", auto ";
+            
+            ExprVisitor ev{os};
+            std::visit(ev, node->OnLocaleVarsUsedInExpr[i]);
+         }
+      }
+      os << ") {" << std::endl;
       ++indent;
       for(const auto& stmt : node->statements) {
          visit(*this, stmt);
       }
       --indent;
       emitIndent();
-      os << "}, " << node->OnLocale->identifier << ");" << std::endl;
+      os << "}, " << node->OnLocale->identifier ;
+      if (node->OnLocaleVarsUsedInExpr.size() > 0)
+      {
+         std::cout << "OnExpression OnLocaleVarsUsedInExpr size: "
+                   << node->OnLocaleVarsUsedInExpr.size() << std::endl;
+         std::map<std::string, bool> printed_vars;
+         printed_vars[node->OnLocale->identifier] = true;
+         for (std::size_t i = 0; i < node->OnLocaleVarsUsedInExpr.size(); ++i)
+         {
+            if (!std::holds_alternative<VariableExpression>(
+                    node->OnLocaleVarsUsedInExpr[i]))
+            {
+               assert(false &&
+                   "OnExpression OnLocaleVarsUsedInExpr should be a "
+                   "VariableExpression");
+            }
+            if(printed_vars.find(std::get<VariableExpression>(node->OnLocaleVarsUsedInExpr[i]).sym->identifier) != printed_vars.end()) {
+               continue; // already printed
+            }
+            printed_vars[std::get<VariableExpression>(node->OnLocaleVarsUsedInExpr[i]).sym->identifier] = true;
+            os << " ,";
+            
+            ExprVisitor ev{os};
+            std::visit(ev, node->OnLocaleVarsUsedInExpr[i]);
+         }
+      }
+      os << ");" << std::endl;
    }
    void operator()(std::shared_ptr<ReturnExpression> const& node) {
       emitIndent();
