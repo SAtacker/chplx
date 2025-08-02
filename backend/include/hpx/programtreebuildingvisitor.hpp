@@ -62,6 +62,9 @@ struct ProgramTreeBuildingVisitor {
 
    bool pushedDot = false;
 
+   bool isInsideZip = false;
+   int isInsideForallTuple = 0;
+
    static std::unordered_map<std::string, int> operatorEncoder;
 };
 

@@ -626,7 +626,7 @@ struct StatementVisitor {
       if(range_str != ""){
          os << "}";
       }
-      os << ", [&](auto " << node->iterator.identifier << ") {" << std::endl;
+      os << ", [&](auto " << node->iterator->identifier << ") {" << std::endl;
 
       ++indent;
       for(const auto& stmt : node->statements) {
@@ -642,6 +642,41 @@ struct StatementVisitor {
          os << node->chplLine;
       }
       emitIndent();
+
+
+      const bool isZippedRange = node->isZippedIter;
+
+      if (isZippedRange)
+      {
+         os << "chplx::forall(chplx::ZipRange{";
+         int i = 0;
+         for (auto& idx : node->indexSet)
+         {
+            if (i++ > 0)
+               os << ',';
+            ExprVisitor ev{os};
+            std::visit(ev, idx);
+         }
+         os << "}, [&](";
+         i = 0;
+         for (auto& itr : node->iterator)
+         {
+            if (i++ > 0)
+               os << ", ";
+            os << "auto " << itr->identifier;
+         }
+         os << ") {" << std::endl;
+
+         ++indent;
+         for (const auto& stmt : node->statements)
+         {
+            visit(*this, stmt);
+         }
+         --indent;
+         emitIndent();
+         os << "});" << std::endl;
+         return;
+      }
 
       // replace with statements
       //
@@ -699,7 +734,7 @@ struct StatementVisitor {
       if(range_str != ""){
          os << "}";
       }
-      os << ", [&](auto " << node->iterator.identifier << ") {" << std::endl;
+      os << ", [&](auto " << node->iterator[0]->identifier << ") {" << std::endl;
 
       ++indent;
       for(const auto& stmt : node->statements) {
@@ -762,7 +797,7 @@ struct StatementVisitor {
          os << "}";
       }
 
-      os << ", [&](auto " << node->iterator.identifier << ") {" << std::endl;
+      os << ", [&](auto " << node->iterator->identifier << ") {" << std::endl;
       ++indent;
       for(const auto& stmt : node->statements) {
          visit(*this, stmt);

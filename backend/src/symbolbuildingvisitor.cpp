@@ -267,6 +267,8 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     {
        std::string identifier_str{dynamic_cast<Identifier const*>(ast)->name().c_str()};
 
+       std::cout << "Identifier: " << identifier_str << std::endl;
+
        if(sym && !std::holds_alternative<std::monostate>(sym->get().kind)) {
           const std::size_t lutId = sym->get().scopeId;
              //std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind) ?
@@ -1017,6 +1019,9 @@ std::cout << "ELSE\t" << identifier_str << std::endl;
           std::string{dynamic_cast<NamedDecl const*>(ast)->name().c_str()},
           {}, kindqual, cfg, symbolTable.symbolTableRef->id
        }});
+
+       std::cout << "Variable Identifier:\t" << std::string{dynamic_cast<NamedDecl const*>(ast)->name().c_str()} 
+        << " Kindqual: " << kindqual << std::endl;
 
        sym.reset();
        sym = symstack.back();
@@ -1879,10 +1884,14 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
     break;
     case asttags::On:
     {
-          std::shared_ptr<func_kind> & fk =
-             std::get<std::shared_ptr<func_kind>>(sym->get().kind);
+    if (std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind))
+    {
+            std::shared_ptr<func_kind>& fk =
+                std::get<std::shared_ptr<func_kind>>(sym->get().kind);
 
-          symbolTable.addEntry(sym->get().scopeId, fk->symbolTableSignature, *sym);
+            symbolTable.addEntry(
+                sym->get().scopeId, fk->symbolTableSignature, *sym);
+    }
 
           sym.reset();
           symnode = nullptr;

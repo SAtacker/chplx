@@ -239,7 +239,7 @@ struct ConditionalExpression : public ScopeExpression {
 
 struct ForLoopExpression : public ScopeExpression {
    Symbol symbol;
-   Symbol iterator;
+   std::optional<Symbol> iterator;
    // this needs to store Statements
    //Symbol indexSet;
    std::vector<Statement> indexSet;
@@ -253,18 +253,20 @@ struct ForLoopExpression : public ScopeExpression {
 
 struct ForallLoopExpression : public ScopeExpression {
    Symbol symbol;
-   Symbol iterator;
+   std::vector<std::optional<Symbol>> iterator;
    //Symbol indexSet;
    std::vector<Statement> indexSet;
    std::vector<Statement> statements;
    std::string chplLine;
+   
+   bool isZippedIter = false;
 
    void emit(std::ostream & os) const;
 };
 
 struct CoforallLoopExpression : public ScopeExpression {
    Symbol symbol;
-   Symbol iterator;
+   std::optional<Symbol> iterator;
    //Symbol indexSet;
    std::vector<Statement> indexSet;
    std::vector<Statement> statements;

@@ -162,6 +162,7 @@ struct VariableLiteralVisitor {
    void operator()(std::shared_ptr<class_kind> const&) {
    }
    void operator()(std::shared_ptr<array_kind> const& ak) {
+      std::cout << "Array Declaration Literal: " << identifier << std::endl;
       curStmts.push_back(ArrayDeclarationLiteralExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}, {}});
       // literal arrays always have 1 domain in the symboltable
       //
@@ -464,7 +465,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
               auto arrayIdentifier = arrayVarsym->identifier;
 
               auto varsymInsideForLoop = arrayVarsym;
-              std::string iteratorName = fle->iterator.identifier;
+              std::string iteratorName = fle->iterator->identifier;
               auto arrayIdentifierForLoopExpression =
                   arrayIdentifier + "(" + iteratorName + ")";
               std::vector<Statement>* cStmts = curStmts.back();
@@ -537,7 +538,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
            std::optional<Symbol> varsym =
                symbolTable.find(symbolTableRef->id, identifier);
            if(varsym) { 
-              if(fle->indexSet.size() < 2) {
+              if(fle->indexSet.size() < 2 || (fle->indexSet.size()<3 && fle->isZippedIter)) {
                  fle->indexSet.emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
               }
               else if(fle->indexSet.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back())) {
@@ -582,8 +583,32 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
            std::optional<Symbol> varsym =
                symbolTable.find(symbolTableRef->id, identifier);
            if(varsym) { 
+              std::cout << "Coforall Loop Expression: " << identifier << " index set size " << fle->indexSet.size() << std::endl;
+              std::cout << "IsInsideOn: " << isInsideOn << std::endl;
               if(fle->indexSet.size() < 2) {
-                 fle->indexSet.emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
+                 if (fle->indexSet.size() > 0)
+                 {
+                    std::cout
+                        << "Coforall index: "
+                        << (std::get<VariableExpression>(fle->indexSet.back()))
+                               .sym->identifier
+                        << std::endl;
+                 }
+                 if (fle->indexSet.size() > 0 &&
+                     (std::get<VariableExpression>(fle->indexSet.back()))
+                             .sym->identifier == "Locales")
+                 {
+                    //don't do anything for this case
+                 }
+                 else
+                 {
+                    fle->indexSet.emplace_back(
+                        VariableExpression{std::make_shared<Symbol>(*varsym)});
+                     if(isInsideOn){
+                        currentOnExpr->OnLocaleVarsUsedInExpr.emplace_back(
+                            VariableExpression{std::make_shared<Symbol>(*varsym)});
+                     }
+                 }
               }
               else if(fle->indexSet.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back())) {
                 auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back());
@@ -611,6 +636,10 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                  }
                  else if(fle->indexSet.size() < 2) {
                     fle->indexSet.emplace_back(VariableExpression{std::make_shared<Symbol>(itr->second)});
+                    if(isInsideOn){
+                        currentOnExpr->OnLocaleVarsUsedInExpr.emplace_back(
+                            VariableExpression{std::make_shared<Symbol>(*varsym)});
+                     }
                  }
                  else {
                     cStmts->emplace_back(VariableExpression{std::make_shared<Symbol>(itr->second)});
@@ -631,6 +660,11 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
               if (one->OnLocaleVarExpr.size() >= 1)
               {
                  std::cout << "Hello " << identifier << std::endl;
+                 if (isInsideOn && !varsym->isIntegralKind())
+                 {
+                    currentOnExpr->OnLocaleVarsUsedInExpr.emplace_back(
+                        VariableExpression{std::make_shared<Symbol>(*varsym)});
+                 }
                  if (0 < cStmts->size() &&
                      std::holds_alternative<
                          std::shared_ptr<FunctionCallExpression>>(
@@ -1040,11 +1074,25 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
           std::shared_ptr<CoforallLoopExpression> & fle =
              std::get<std::shared_ptr<CoforallLoopExpression>>(curStmts[curStmts.size()-2]->back());
 
+           std::cout << "Coforall indexset size: " << fle->indexSet.size() << std::endl;
+           std::cout << "Coforall indexset size: " << (fle->indexSet.size() ?  std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back()) : 0) << std::endl;
+
           if(fle->indexSet.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back())) {
              auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back());
              bo->statements.emplace_back(LiteralExpression{int_kind{}, ast});
           }
           else {
+             if(fle->indexSet.size() && std::holds_alternative<VariableExpression>(fle->indexSet.back())){
+               auto var = std::get<VariableExpression>(fle->indexSet.back());
+               std::cout << "Coforall index: " << var.sym->identifier << std::endl;
+               if(var.sym->identifier == "Locales"){
+                  cStmts->emplace_back(LiteralExpression{int_kind{}, ast});
+                  return true;
+               }
+             }else{
+               if(fle->indexSet.size())
+               std::cout << "Coforall index set kind: " << fle->indexSet.back().index() << std::endl;
+             }
              fle->indexSet.emplace_back(LiteralExpression{int_kind{}, ast});
           }
        }
@@ -1232,7 +1280,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
              auto arrayIdentifier = arrayVarsym->identifier;
 
              auto varsymInsideForLoop = arrayVarsym;
-             std::string iteratorName = fle->iterator.identifier;
+             std::string iteratorName = fle->iterator->identifier;
              auto arrayIdentifierForLoopExpression =
                  arrayIdentifier + "(" + iteratorName + ")";
 
@@ -1857,7 +1905,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                      arrayIdentifier = arrayVarsym->identifier;
 
                      auto varsymInsideForLoop = arrayVarsym;
-                     std::string iteratorName = fle->iterator.identifier;
+                     std::string iteratorName = fle->iterator->identifier;
                      auto arrayIdentifierForLoopExpression = arrayIdentifier + "(" + iteratorName + ")";
 
                      std::vector<Statement> * cStmts = curStmts.back();
@@ -2036,12 +2084,16 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     }
     break;
     case asttags::Zip:
+    isInsideZip = true;
     break;
     case asttags::END_Call:
     break;
     case asttags::MultiDecl:
     break;
     case asttags::TupleDecl:
+    {
+    ++isInsideForallTuple;
+    }
     break;
     case asttags::ForwardingDecl:
     break;
@@ -2064,12 +2116,17 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        symbolTable.find(symbolTableRef->id, identifier, varsym);
        bool stmt = true;
 
+       std::cout << "Variable identifier: " << identifier << std::endl;
+
        if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<ForLoopExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
            std::shared_ptr<ForLoopExpression> & fl =
                std::get<std::shared_ptr<ForLoopExpression>>(curStmts[curStmts.size()-2]->back());
 
-           fl->iterator = *varsym;
-           stmt = false;
+           if (!fl->iterator)
+           {
+             fl->iterator = *varsym;
+             stmt = false;
+           }
 
            if (fl->isArrayInitForLoop)
            {
@@ -2126,16 +2183,31 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        else if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<ForallLoopExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
            std::shared_ptr<ForallLoopExpression> & fl =
                std::get<std::shared_ptr<ForallLoopExpression>>(curStmts[curStmts.size()-2]->back());
-
-           fl->iterator = *varsym;
-           stmt = false;
+            if(isInsideForallTuple == 2){
+               fl->isZippedIter = true;
+            }
+            if (fl->iterator.size() && !fl->iterator[0] &&
+                isInsideForallTuple != 2)
+            {
+               fl->iterator[0] = *varsym;
+               stmt = false;
+            }
+            else
+            {
+               fl->iterator.emplace_back(*varsym);
+               stmt = false;
+            }
+           std::cout << "Inside Forall : " << isInsideForallTuple << " stmt : " << stmt << std::endl;
        }
        else if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<CoforallLoopExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
            std::shared_ptr<CoforallLoopExpression> & fl =
                std::get<std::shared_ptr<CoforallLoopExpression>>(curStmts[curStmts.size()-2]->back());
-
-           fl->iterator = *varsym;
-           stmt = false;
+            std::cout << "Does iterator have value? " << fl->iterator.has_value() << "\n";
+            if (!fl->iterator)
+            {
+             fl->iterator = *varsym;
+             stmt = false;
+            }
        }
        else if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<OnExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
            std::shared_ptr<OnExpression> & one =
@@ -2153,8 +2225,30 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
            }
            std::cout << "stmt : " <<stmt << "\n";
       }
-      std::cout << "varsym kind : " << varsym->kind.index() << "\n";
+      std::cout << "varsym kind : " << varsym->kind.index() << " does varsym hold val: " << varsym.has_value() << "\n";
+      std::cout << "stmt : " << stmt << "\n";
+      std::cout << "IsInsideOn: " << isInsideOn << std::endl;
        if(stmt) {
+         if(isInsideForallTuple == 2){
+            std::vector<Statement> * cStmts = curStmts.back();
+
+             // this situation is not likely to happen
+             //
+             std::cout << "2225\n";
+             if(varsym->literal.size() ) {
+                   std::visit(
+                      VariableLiteralVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ctx, ast},
+                      varsym->kind
+                   );
+                }
+                else {
+                   std::visit(
+                   VariableVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ctx, ast},
+                   varsym->kind
+                   );
+             }
+             return true;
+         }
           if(varsym &&
              std::holds_alternative<std::shared_ptr<array_kind>>(varsym->kind) &&
              std::get<std::shared_ptr<array_kind>>(varsym->kind)->args.size() &&
@@ -2166,6 +2260,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
 
              // this situation is not likely to happen
              //
+             std::cout << "2173\n";
              if(varsym->literal.size() ||
                 std::holds_alternative<std::shared_ptr<kind_node_type>>(std::get<std::shared_ptr<array_kind>>(varsym->kind)->retKind) ) {
                    std::visit(
@@ -2189,6 +2284,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
              std::holds_alternative<std::shared_ptr<array_kind>>(varsym->kind) &&
              std::get<std::shared_ptr<array_kind>>(varsym->kind)->args.size() &&
              std::holds_alternative<std::shared_ptr<domain_kind>>(std::get<std::shared_ptr<array_kind>>(varsym->kind)->args.back().kind)) {
+               std::cout << "2197\n";
              std::vector<Statement> * cStmts = curStmts.back();
              auto & ak = std::get<std::shared_ptr<array_kind>>(varsym->kind);
              if(ak->args.size()) {
@@ -2199,6 +2295,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
           else if(varsym && std::holds_alternative<std::shared_ptr<tuple_kind>>(varsym->kind)) {
              std::shared_ptr<tuple_kind> & tk =
                 std::get<std::shared_ptr<tuple_kind>>(varsym->kind);
+               std::cout << "Tuple proc\n";
 
              if(0 < tk->args.size()) {
                std::vector<Statement> * cStmts = curStmts.back();
@@ -2219,8 +2316,12 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
           }
           else if(varsym) {
              std::vector<Statement> * cStmts = curStmts.back();
-             if(std::holds_alternative<std::monostate>(varsym->kind) ||
-                std::holds_alternative<nil_kind>(varsym->kind)) {
+             std::cout << "2228\n";
+             if(cStmts->size())
+             std::cout << "Last expr kind: " << cStmts->back().index() << std::endl;
+             if((std::holds_alternative<std::monostate>(varsym->kind) ||
+                std::holds_alternative<nil_kind>(varsym->kind)) && !isInsideZip ) {
+                  std::cout << "2231\n";
                cStmts->emplace_back(
                   std::make_shared<ScalarDeclarationExprExpression>(ScalarDeclarationExprExpression{
                      {{symbolTableRef->id}, identifier, varsym->kind, emitChapelLine(ast), varsym->kindqualifier, varsym->isConfig},{}}
@@ -2240,6 +2341,9 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                 if(varsym->literal.size() ||
                    ( std::holds_alternative<std::shared_ptr<array_kind>>(varsym->kind) &&
                      std::holds_alternative<std::shared_ptr<kind_node_type>>(std::get<std::shared_ptr<array_kind>>(varsym->kind)->retKind)) ) {
+                   std::cout << "Variable 2246\n";
+                   std::cout << "Kind: " << varsym->kind.index() << std::endl;
+                   std::cout << "isInsideOn: " << isInsideOn << std::endl;
                    std::visit(
                       VariableLiteralVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ctx, ast},
                       varsym->kind
@@ -2273,6 +2377,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
              }
           }
        }
+       std::cout << "Variable proc end\n";
     }
     break;
     case asttags::END_VarLikeDecl:
@@ -2477,6 +2582,8 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
 
           auto & fndecl = std::get<std::shared_ptr<ForallLoopExpression>>(cStmts->back());
           curStmts.emplace_back(&(fndecl->statements));
+
+          isInsideForallTuple = 1;
        }
     }
     break;
@@ -2815,6 +2922,7 @@ void ProgramTreeBuildingVisitor::exit(const uast::AstNode * ast) {
     break;
     case asttags::For:
     case asttags::Forall:
+    isInsideForallTuple = 0;
     break;
     case asttags::Return:
     case asttags::FnCall:
@@ -2877,12 +2985,14 @@ void ProgramTreeBuildingVisitor::exit(const uast::AstNode * ast) {
     case asttags::Tuple:
     break;
     case asttags::Zip:
+    isInsideZip = false;
     break;
     case asttags::END_Call:
     break;
     case asttags::MultiDecl:
     break;
     case asttags::TupleDecl:
+    --isInsideForallTuple;
     break;
     case asttags::ForwardingDecl:
     break;
@@ -2929,6 +3039,7 @@ void ProgramTreeBuildingVisitor::exit(const uast::AstNode * ast) {
     break;
     case asttags::Block:
     {
+       if(isInsideOn) break;
        if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<ConditionalExpression>>( curStmts[curStmts.size()-2]->back() )) {
           curStmts.pop_back();
 
