@@ -82,7 +82,7 @@ namespace locale_test {
 #line 49 "locale_test.chpl"
             chplx::on(
                 loc,
-                [](auto loc) {
+                [](auto&& loc) {
 #line 50 "locale_test.chpl"
                     chplx::writeln("hello locale ", loc.id());
                 },
@@ -93,7 +93,7 @@ namespace locale_test {
 #line 53 "locale_test.chpl"
             chplx::on(
                 loc,
-                [](auto loc) {
+                [](auto&& loc) {
 #line 54 "locale_test.chpl"
                     chplx::writeln("hello locale ", loc.id());
                 },
@@ -104,7 +104,7 @@ namespace locale_test {
 #line 58 "locale_test.chpl"
             chplx::on(
                 loc,
-                [](auto loc) {
+                [](auto&& loc) {
 #line 59 "locale_test.chpl"
                     chplx::writeln("hello locale ", loc.id());
                 },
@@ -113,7 +113,7 @@ namespace locale_test {
 #line 63 "locale_test.chpl"
         chplx::on(
             b,
-            [](auto b) {
+            [](auto&& b) {
 #line 64 "locale_test.chpl"
                 chplx::writeln("This locale ID is: ", chplx::here.id());
             },
@@ -121,7 +121,7 @@ namespace locale_test {
 #line 67 "locale_test.chpl"
         chplx::on(
             b,
-            [](auto b) {
+            [](auto&& b) {
 #line 68 "locale_test.chpl"
                 chplx::writeln(
                     "This locale ID is: ", chplx::here.id(), " b is ", b);
@@ -136,7 +136,7 @@ namespace locale_test {
 #line 74 "locale_test.chpl"
         chplx::on(
             x1,
-            [](auto x1, auto loc1) {
+            [](auto&& x1, auto&& loc1) {
 #line 75 "locale_test.chpl"
                 std::int64_t y1 = 3;
 #line 76 "locale_test.chpl"
@@ -145,7 +145,7 @@ namespace locale_test {
 #line 78 "locale_test.chpl"
                 chplx::on(
                     loc1,
-                    [](auto loc1, auto x1, auto y1) {
+                    [](auto&& loc1, auto&& x1, auto&& y1) {
 #line 79 "locale_test.chpl"
                         chplx::writeln("From locale 0, x is: ", x1.id(),
                             " and y is: ", y1);

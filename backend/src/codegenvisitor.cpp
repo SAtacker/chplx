@@ -648,7 +648,7 @@ struct StatementVisitor {
 
       if (isZippedRange)
       {
-         os << "chplx::forall(chplx::ZipRange{";
+         os << "chplx::forall(chplx::zip(";
          int i = 0;
          for (auto& idx : node->indexSet)
          {
@@ -657,13 +657,13 @@ struct StatementVisitor {
             ExprVisitor ev{os};
             std::visit(ev, idx);
          }
-         os << "}, [&](";
+         os << "), [&](";
          i = 0;
          for (auto& itr : node->iterator)
          {
             if (i++ > 0)
                os << ", ";
-            os << "auto " << itr->identifier;
+            os << "auto&& " << itr->identifier;
          }
          os << ") {" << std::endl;
 
@@ -821,7 +821,7 @@ struct StatementVisitor {
       ExprVisitor ev{os};
       std::visit(ev, node->OnLocaleVarExpr[0]);
 
-      os << ", [](auto " << node->OnLocale->identifier ;
+      os << ", [](auto&& " << node->OnLocale->identifier ;
       if (node->OnLocaleVarsUsedInExpr.size() > 0)
       {
          std::cout << "OnExpression OnLocaleVarsUsedInExpr size: "
@@ -843,7 +843,7 @@ struct StatementVisitor {
             }
             printed_vars[std::get<VariableExpression>(node->OnLocaleVarsUsedInExpr[i]).sym->identifier] = true;
 
-            os << ", auto ";
+            os << ", auto&& ";
             
             ExprVisitor ev{os};
             std::visit(ev, node->OnLocaleVarsUsedInExpr[i]);
