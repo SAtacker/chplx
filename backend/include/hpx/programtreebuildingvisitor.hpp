@@ -61,6 +61,7 @@ struct ProgramTreeBuildingVisitor {
    std::shared_ptr<OnExpression> currentOnExpr = nullptr;
 
    bool pushedDot = false;
+   bool specialPushedDot = false;
 
    bool isInsideZip = false;
    int isInsideForallTuple = 0;

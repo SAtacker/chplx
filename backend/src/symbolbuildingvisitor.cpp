@@ -370,6 +370,8 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                 sym->get().kind = std::holds_alternative<std::shared_ptr<func_kind>>(fsym->kind) ?
                    std::get<std::shared_ptr<func_kind>>(fsym->kind)->retKind : fsym->kind;
                 sym->get().scopeId = symbolTable.symbolTableRef->id;
+                std::cout << "373 Scope ID: " << sym->get().scopeId
+                          << " SymbolTableRef ID: " << symbolTable.symbolTableRef->id << std::endl;
              }
           }
        }
@@ -377,6 +379,8 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           std::optional<Symbol> fsym{};
           symbolTable.find(identifier_str, fsym);
           if(fsym.has_value()) {
+            std::cout << "383 Scope ID: " << sym->get().scopeId
+                          << " SymbolTableRef ID: " << symbolTable.symbolTableRef->id << std::endl;
              sym->get().kind = fsym->kind;
              sym->get().scopeId = symbolTable.symbolTableRef->id;
           }
@@ -1257,7 +1261,12 @@ std::cout << "BLOCK HERE" << std::endl;
        std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
        const std::size_t parScope = symbolTable.symbolTableRef->id;
 
+       std::cout << "On enter scope before: " << parScope << std::endl;
+
        symbolTable.pushScope();
+       symbolTable.parentSymbolTableId = parScope;
+       symbolTable.symbolTableRef->parent = prevSymbolTableRef;
+       
        sym.reset();
        sym = symstack.back();
 
@@ -1269,10 +1278,9 @@ std::cout << "BLOCK HERE" << std::endl;
        //
        fk->lutId = symbolTable.symbolTableRef->id;
 
-       symbolTable.parentSymbolTableId = parScope;
-       symbolTable.symbolTableRef->parent = prevSymbolTableRef;
-
        symnode = const_cast<uast::AstNode*>(ast);
+
+       std::cout << "On enter scope after: " << symbolTable.symbolTableRef->id << std::endl;
     }
     break;
     case asttags::Serial:
@@ -1896,7 +1904,11 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
           sym.reset();
           symnode = nullptr;
 
+          std::cout << "On exit scope before : " << symbolTable.symbolTableRef->id << std::endl;
+
           symbolTable.popScope();
+
+          std::cout << "On exit scope after : " << symbolTable.symbolTableRef->id << std::endl;
 
           symstack.pop_back();
           sym = symstack.back();
