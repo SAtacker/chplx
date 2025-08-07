@@ -1398,6 +1398,7 @@ std::cout << "BLOCK HERE" << std::endl;
            && symnode->tag() == asttags::Variable    // that is a `var …` decl
            && std::holds_alternative<std::shared_ptr<array_kind>>(
                   sym->get().kind);    // whose kind is still array
+       std::cout << "For : isArrayInitExpr: " << isArrayInitExpr << std::endl;
 
        if (isArrayInitExpr)
        {
