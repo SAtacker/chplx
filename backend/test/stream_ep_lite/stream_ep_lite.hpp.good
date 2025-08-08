@@ -34,7 +34,7 @@ namespace stream_ep_lite {
     {
 #line 23 "stream_ep_lite.chpl"
         void chapel_main();
-#line 82 "stream_ep_lite.chpl"
+#line 95 "stream_ep_lite.chpl"
         void printConfiguration();
 
         static void __construct()

@@ -22,6 +22,10 @@ config const seed = 1234;
 //
 proc chapel_main() {
   printConfiguration();   // print the problem size, number of trials, etc.    
+
+  // var minTimes: [1..numLocales] real;
+  // var validAnswers: [1..numLocales] bool;
+
   //
   // *** Fragment control so that we have a single task running on
   // *** every locale.
@@ -45,7 +49,9 @@ proc chapel_main() {
     const M     = 1 << 31;      // 2^31
     const D     = M - 1;        // for scaling to [0,1]
 
-    var s = seed;
+    var s : int;
+    s = seed;
+
     for idx in 0..m {
         // advance state, fill A
         s = (Acoef*s + Ccoef) % M;
@@ -68,8 +74,15 @@ proc chapel_main() {
 
     }
 
+    var _here_id = here.id;
+
+    // minTimes[_here_id] = 0.0;
+    // validAnswers[_here_id] = true;
+
     if (printStats) {
       writeln("Execution done on locale ", here.id);
+      // writeln("Min Time: ", minTimes[_here_id]);
+      // writeln("Valid: ", validAnswers[_here_id]);
     }
 
  }

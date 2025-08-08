@@ -12,59 +12,63 @@ namespace stream_ep_lite {
     {
 #line 24 "stream_ep_lite.chpl"
         printConfiguration();
-#line 29 "stream_ep_lite.chpl"
+#line 33 "stream_ep_lite.chpl"
         chplx::coforall(chplx::Locales, [&](auto loc) {
-#line 29 "stream_ep_lite.chpl"
+#line 33 "stream_ep_lite.chpl"
             chplx::on(
                 loc,
                 [](auto&& loc, auto&& numTrials, auto&& m, auto&& seed,
                     auto&& alpha, auto&& printStats) {
-#line 31 "stream_ep_lite.chpl"
+#line 35 "stream_ep_lite.chpl"
                     chplx::Array<double, chplx::Domain<1>> execTime(
                         chplx::Range(1, numTrials));
-#line 36 "stream_ep_lite.chpl"
+#line 40 "stream_ep_lite.chpl"
                     chplx::Array<double, chplx::Domain<1>> A(
                         chplx::Range(1, m));
-#line 37 "stream_ep_lite.chpl"
+#line 41 "stream_ep_lite.chpl"
                     chplx::Array<double, chplx::Domain<1>> B(
                         chplx::Range(1, m));
-#line 38 "stream_ep_lite.chpl"
+#line 42 "stream_ep_lite.chpl"
                     chplx::Array<double, chplx::Domain<1>> C(
                         chplx::Range(1, m));
-#line 43 "stream_ep_lite.chpl"
+#line 47 "stream_ep_lite.chpl"
                     const std::int64_t Acoef = 1664525;
-#line 44 "stream_ep_lite.chpl"
-                    const std::int64_t Ccoef = 1013904223;
-#line 45 "stream_ep_lite.chpl"
-                    auto M = 1 << 31;
-#line 46 "stream_ep_lite.chpl"
-                    auto D = M - 1;
 #line 48 "stream_ep_lite.chpl"
-                    std::int64_t s;
+                    const std::int64_t Ccoef = 1013904223;
 #line 49 "stream_ep_lite.chpl"
-                    chplx::forLoop(chplx::Range{0, m}, [&](auto idx) {
-#line 51 "stream_ep_lite.chpl"
-                        s = ((Acoef * s) + Ccoef) % M;
+                    auto M = 1 << 31;
+#line 50 "stream_ep_lite.chpl"
+                    auto D = M - 1;
 #line 52 "stream_ep_lite.chpl"
-                        A(idx) = s / D;
+                    std::int64_t s;
+#line 53 "stream_ep_lite.chpl"
+                    s = seed;
 #line 55 "stream_ep_lite.chpl"
+                    chplx::forLoop(chplx::Range{0, m}, [&](auto idx) {
+#line 57 "stream_ep_lite.chpl"
                         s = ((Acoef * s) + Ccoef) % M;
-#line 56 "stream_ep_lite.chpl"
+#line 58 "stream_ep_lite.chpl"
+                        A(idx) = s / D;
+#line 61 "stream_ep_lite.chpl"
+                        s = ((Acoef * s) + Ccoef) % M;
+#line 62 "stream_ep_lite.chpl"
                         B(idx) = s / D;
                     });
-#line 59 "stream_ep_lite.chpl"
+#line 65 "stream_ep_lite.chpl"
                     chplx::forLoop(chplx::Range{1, numTrials}, [&](auto trial) {
-#line 66 "stream_ep_lite.chpl"
+#line 72 "stream_ep_lite.chpl"
                         chplx::forall(chplx::zip(A, B, C),
                             [&](auto&& a, auto&& b, auto&& c) {
-#line 67 "stream_ep_lite.chpl"
+#line 73 "stream_ep_lite.chpl"
                                 a = b + (alpha * c);
                             });
                     });
-#line 71 "stream_ep_lite.chpl"
+#line 77 "stream_ep_lite.chpl"
+                    auto _here_id = chplx::here.id();
+#line 82 "stream_ep_lite.chpl"
                     if (printStats)
                     {
-#line 72 "stream_ep_lite.chpl"
+#line 83 "stream_ep_lite.chpl"
                         chplx::writeln(
                             "Execution done on locale ", chplx::here.id());
                     }
@@ -73,17 +77,17 @@ namespace stream_ep_lite {
         });
     };
 
-#line 82 "stream_ep_lite.chpl"
+#line 95 "stream_ep_lite.chpl"
     void __thisModule::printConfiguration()
     {
-#line 83 "stream_ep_lite.chpl"
+#line 96 "stream_ep_lite.chpl"
         if (printParams)
         {
-#line 88 "stream_ep_lite.chpl"
+#line 101 "stream_ep_lite.chpl"
             chplx::writeln("Number of trials = ", numTrials);
-#line 89 "stream_ep_lite.chpl"
+#line 102 "stream_ep_lite.chpl"
             chplx::writeln("m = ", m);
-#line 90 "stream_ep_lite.chpl"
+#line 103 "stream_ep_lite.chpl"
             chplx::writeln("seed = ", seed);
         }
     };
@@ -114,7 +118,7 @@ namespace stream_ep_lite {
                 std::chrono::nanoseconds(chplx_fork_join_executor_yield_delay));
 #line 2 "stream_ep_lite.chpl"
         const std::int64_t numVectors = 3;
-#line 94 "stream_ep_lite.chpl"
+#line 107 "stream_ep_lite.chpl"
         chapel_main();
 
         delete exec;
