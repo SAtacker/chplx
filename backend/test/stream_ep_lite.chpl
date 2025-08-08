@@ -11,16 +11,17 @@ config const alpha = 3.0;
 //
 config const numTrials = 10;
 config const epsilon = 1e-6;
-config const useRandomSeed = true;
 
 config const printParams = true;
 config const printStats = true;
+
+config const seed = 1234;
 
 //
 // The program entry point
 //
 proc chapel_main() {
-  printConfiguration();   // print the problem size, number of trials, etc.
+  printConfiguration();   // print the problem size, number of trials, etc.    
   //
   // *** Fragment control so that we have a single task running on
   // *** every locale.
@@ -36,10 +37,23 @@ proc chapel_main() {
     var B: [1..m] real;
     var C: [1..m] real;
 
-    // Initialize the input vectors, B and C
-    forall (b, c) in zip(B, C) do {
-      b = 1.0;
-      c = 1.0;
+
+    // Randomly initialize the vectors A and B
+
+    const Acoef = 1664525;
+    const Ccoef = 1013904223;
+    const M     = 1 << 31;      // 2^31
+    const D     = M - 1;        // for scaling to [0,1]
+
+    var s = seed;
+    for idx in 0..m {
+        // advance state, fill A
+        s = (Acoef*s + Ccoef) % M;
+        A[idx] = s / D ;
+
+        // advance state, fill B
+        s = (Acoef*s + Ccoef) % M;
+        B[idx] = s / D ;
     }
 
     for trial in 1..numTrials {                        // loop over the trials
@@ -73,6 +87,7 @@ proc printConfiguration() {
     //
     writeln("Number of trials = ", numTrials);
     writeln("m = ", m);
+    writeln("seed = ", seed);
   }
 }
 

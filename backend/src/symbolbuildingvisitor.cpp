@@ -125,6 +125,9 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
    addSymbolEntry("%",
       Symbol{{std::make_shared<func_kind>(func_kind{{{}, "%", {}, {}}}), std::string{"%"}, {}, -1, false, symbolTable.symbolTableRef->id}}
    );
+   addSymbolEntry("<<",
+      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "<<", {}, {}}}), std::string{"<<"}, {}, -1, false, symbolTable.symbolTableRef->id}}
+   );
    addSymbolEntry("=",
       Symbol{{std::make_shared<func_kind>(func_kind{{{}, "=", {}, {}}}), std::string{"="}, {}, -1, false, symbolTable.symbolTableRef->id}}
    );

@@ -23,18 +23,18 @@ namespace stream_ep_lite {
     extern std::int64_t numTrials;
 #line 13 "stream_ep_lite.chpl"
     extern double epsilon;
-#line 14 "stream_ep_lite.chpl"
-    extern bool useRandomSeed;
-#line 16 "stream_ep_lite.chpl"
+#line 15 "stream_ep_lite.chpl"
     extern bool printParams;
-#line 17 "stream_ep_lite.chpl"
+#line 16 "stream_ep_lite.chpl"
     extern bool printStats;
+#line 18 "stream_ep_lite.chpl"
+    extern std::int64_t seed;
 
     struct __thisModule
     {
-#line 22 "stream_ep_lite.chpl"
+#line 23 "stream_ep_lite.chpl"
         void chapel_main();
-#line 68 "stream_ep_lite.chpl"
+#line 82 "stream_ep_lite.chpl"
         void printConfiguration();
 
         static void __construct()
