@@ -420,6 +420,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
               std::cout << "cStmts back kind: " << cStmts->back().index() << std::endl;
               if (varsym &&
                   !std::holds_alternative<std::shared_ptr<func_kind>>(
+                      varsym->kind) && !std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(
                       varsym->kind) && "here" != varsym->identifier && !pushedDot && !specialPushedDot)
               {
                   std::cout << "Found Symbol: " << varsym->identifier << " kind: " << varsym->kind.index() << std::endl;
