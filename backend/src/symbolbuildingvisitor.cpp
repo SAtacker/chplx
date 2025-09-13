@@ -150,7 +150,7 @@ std::string SymbolBuildingVisitor::emitChapelLine(uast::AstNode const* ast) {
 bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
    assert(ctx != nullptr);
    if(chplx::util::compilerDebug) {
-      std::cout << "***Enter AST Node\t" << tagToString(ast->tag()) << std::endl
+      chplx::util::dout << "***Enter AST Node\t" << tagToString(ast->tag()) << std::endl
                 << "***\tCurrent Scope\t" << symbolTable.symbolTableRef->id << std::endl
                 << "***\t" << emitChapelLine(ast);
    }
@@ -270,7 +270,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     {
        std::string identifier_str{dynamic_cast<Identifier const*>(ast)->name().c_str()};
 
-       std::cout << "Identifier: " << identifier_str << std::endl;
+       chplx::util::dout << "Identifier: " << identifier_str << std::endl;
 
        if(sym && !std::holds_alternative<std::monostate>(sym->get().kind)) {
           const std::size_t lutId = sym->get().scopeId;
@@ -373,7 +373,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                 sym->get().kind = std::holds_alternative<std::shared_ptr<func_kind>>(fsym->kind) ?
                    std::get<std::shared_ptr<func_kind>>(fsym->kind)->retKind : fsym->kind;
                 sym->get().scopeId = symbolTable.symbolTableRef->id;
-                std::cout << "373 Scope ID: " << sym->get().scopeId
+                chplx::util::dout << "373 Scope ID: " << sym->get().scopeId
                           << " SymbolTableRef ID: " << symbolTable.symbolTableRef->id << std::endl;
              }
           }
@@ -382,14 +382,14 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           std::optional<Symbol> fsym{};
           symbolTable.find(identifier_str, fsym);
           if(fsym.has_value()) {
-            std::cout << "383 Scope ID: " << sym->get().scopeId
+            chplx::util::dout << "383 Scope ID: " << sym->get().scopeId
                           << " SymbolTableRef ID: " << symbolTable.symbolTableRef->id << std::endl;
              sym->get().kind = fsym->kind;
              sym->get().scopeId = symbolTable.symbolTableRef->id;
           }
        }
 /*       else {
-std::cout << "ELSE\t" << identifier_str << std::endl;
+chplx::util::dout << "ELSE\t" << identifier_str << std::endl;
        }
 */
     }
@@ -783,8 +783,8 @@ std::cout << "ELSE\t" << identifier_str << std::endl;
         )) {
            const FnCall* fc = dynamic_cast<const FnCall*>(ast);
            std::string identifier{dynamic_cast<const Identifier*>(fc->calledExpression())->name().c_str()};
-           std::cout << "FnCall Identifier:\t" << identifier << std::endl;
-           std::cout << "sym->get().kind:\t" << sym->get().kind.index() << std::endl;
+           chplx::util::dout << "FnCall Identifier:\t" << identifier << std::endl;
+           chplx::util::dout << "sym->get().kind:\t" << sym->get().kind.index() << std::endl;
 
            auto rsym =
               symbolTable.findPrefix(symbolTable.symbolTableRef->id, identifier);
@@ -803,7 +803,7 @@ std::cout << "ELSE\t" << identifier_str << std::endl;
 
               // assign variable the return value of the function...
               //
-              std::cout << "Itr kind "<<itr->second.kind.index()<<std::endl;
+              chplx::util::dout << "Itr kind "<<itr->second.kind.index()<<std::endl;
               if(itrstr.size() >= identifier.size() &&
                  itrstr == identifier &&
                  0 < itr->second.kind.index() && 
@@ -811,12 +811,12 @@ std::cout << "ELSE\t" << identifier_str << std::endl;
                  !std::holds_alternative<std::shared_ptr<tuple_kind>>(sym->get().kind) &&
                  std::holds_alternative<std::shared_ptr<func_kind>>(itr->second.kind)
               ) {
-               std::cout << "805\n";
+               chplx::util::dout << "805\n";
                  sym->get().kind = std::get<std::shared_ptr<func_kind>>(itr->second.kind)->retKind;
                  break;
               }
               else if(std::holds_alternative<std::shared_ptr<array_kind>>(sym->get().kind)) {
-               std::cout << "810\n";
+               chplx::util::dout << "810\n";
                  std::shared_ptr<array_kind> & symref =
                     std::get<std::shared_ptr<array_kind>>(sym->get().kind);
 
@@ -845,7 +845,7 @@ std::cout << "ELSE\t" << identifier_str << std::endl;
                       std::holds_alternative<std::shared_ptr<tuple_kind>>(itr->second.kind)
                      && std::holds_alternative<std::shared_ptr<kind_node_type>>(
                         std::get<std::shared_ptr<tuple_kind>>(itr->second.kind)->retKind)) {
-               std::cout << "837\n";
+               chplx::util::dout << "837\n";
                  assert(0 < fc->numActuals());
                  const AstNode* idx = fc->actual(0);
                  assert(idx->tag() == asttags::IntLiteral);
@@ -869,7 +869,7 @@ std::cout << "ELSE\t" << identifier_str << std::endl;
            }
 
            if(std::holds_alternative<nil_kind>(sym->get().kind)) {
-               std::cout << "860\n";
+               chplx::util::dout << "860\n";
               sym->get().kind = expr_kind{};
            }
         }
@@ -1027,7 +1027,7 @@ std::cout << "ELSE\t" << identifier_str << std::endl;
           {}, kindqual, cfg, symbolTable.symbolTableRef->id
        }});
 
-       std::cout << "Variable Identifier:\t" << std::string{dynamic_cast<NamedDecl const*>(ast)->name().c_str()} 
+       chplx::util::dout << "Variable Identifier:\t" << std::string{dynamic_cast<NamedDecl const*>(ast)->name().c_str()} 
         << " Kindqual: " << kindqual << std::endl;
 
        sym.reset();
@@ -1238,7 +1238,7 @@ std::cout << "ELSE\t" << identifier_str << std::endl;
          }
 /*
          else {
-std::cout << "BLOCK HERE" << std::endl;
+chplx::util::dout << "BLOCK HERE" << std::endl;
          }
 */
        }
@@ -1264,7 +1264,7 @@ std::cout << "BLOCK HERE" << std::endl;
        std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
        const std::size_t parScope = symbolTable.symbolTableRef->id;
 
-       std::cout << "On enter scope before: " << parScope << std::endl;
+       chplx::util::dout << "On enter scope before: " << parScope << std::endl;
 
        symbolTable.pushScope();
        symbolTable.parentSymbolTableId = parScope;
@@ -1283,7 +1283,7 @@ std::cout << "BLOCK HERE" << std::endl;
 
        symnode = const_cast<uast::AstNode*>(ast);
 
-       std::cout << "On enter scope after: " << symbolTable.symbolTableRef->id << std::endl;
+       chplx::util::dout << "On enter scope after: " << symbolTable.symbolTableRef->id << std::endl;
     }
     break;
     case asttags::Serial:
@@ -1401,7 +1401,7 @@ std::cout << "BLOCK HERE" << std::endl;
            && symnode->tag() == asttags::Variable    // that is a `var …` decl
            && std::holds_alternative<std::shared_ptr<array_kind>>(
                   sym->get().kind);    // whose kind is still array
-       std::cout << "For : isArrayInitExpr: " << isArrayInitExpr << std::endl;
+       chplx::util::dout << "For : isArrayInitExpr: " << isArrayInitExpr << std::endl;
 
        if (isArrayInitExpr)
        {
@@ -1709,7 +1709,7 @@ std::cout << "BLOCK HERE" << std::endl;
 
 void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
    if(chplx::util::compilerDebug) {
-      std::cout << "---Exit AST Node\t" << tagToString(ast->tag()) << std::endl
+      chplx::util::dout << "---Exit AST Node\t" << tagToString(ast->tag()) << std::endl
                 << "---\tCurrent Scope\t" << symbolTable.symbolTableRef->id << std::endl
                 << "---\t" << emitChapelLine(ast);
    }
@@ -1908,11 +1908,11 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
           sym.reset();
           symnode = nullptr;
 
-          std::cout << "On exit scope before : " << symbolTable.symbolTableRef->id << std::endl;
+          chplx::util::dout << "On exit scope before : " << symbolTable.symbolTableRef->id << std::endl;
 
           symbolTable.popScope();
 
-          std::cout << "On exit scope after : " << symbolTable.symbolTableRef->id << std::endl;
+          chplx::util::dout << "On exit scope after : " << symbolTable.symbolTableRef->id << std::endl;
 
           symstack.pop_back();
           sym = symstack.back();
@@ -1953,7 +1953,7 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
     break;
     case asttags::Block:
     {
-      std::cout <<  sym->get().identifier << std::endl;
+      chplx::util::dout <<  sym->get().identifier << std::endl;
        if(sym) {
           if(std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind)) {
              auto & fk = std::get<std::shared_ptr<func_kind>>(sym->get().kind);
@@ -1975,22 +1975,22 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
              //symbolTable.addEntry(sym->get().scopeId, fk->symbolTableSignature, *sym);
 
              const std::size_t prevScope = sym->get().scopeId; 
-//std::cout << "BEFORE BLCOK IDS\t" << symbolTable.symbolTableRef->id << ' ' << prevScope << std::endl;
+//chplx::util::dout << "BEFORE BLCOK IDS\t" << symbolTable.symbolTableRef->id << ' ' << prevScope << std::endl;
 //                sym.reset();
 //                symnode = nullptr;
 //                sym = symstack.back();
 //               symbolTable.popScope();
-//std::cout << "AFTER BLCOK IDS\t" << symbolTable.symbolTableRef->id << ' ' << sym->get().scopeId << std::endl;
+//chplx::util::dout << "AFTER BLCOK IDS\t" << symbolTable.symbolTableRef->id << ' ' << sym->get().scopeId << std::endl;
 
 /*
              if(2 < symstack.size()) {
-std::cout << "POP BLOCK HERE1" << std::endl;
+chplx::util::dout << "POP BLOCK HERE1" << std::endl;
                symbolTable.popScope();
                symstack.pop_back();
                sym = symstack.back();
              }
              else if(1 < symstack.size()) {
-std::cout << "POP BLOCK HERE2" << std::endl;
+chplx::util::dout << "POP BLOCK HERE2" << std::endl;
                symbolTable.popScope();
                symstack.pop_back();
              }

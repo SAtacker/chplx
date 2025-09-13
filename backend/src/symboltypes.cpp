@@ -28,13 +28,13 @@ std::size_t SymbolTable::pushScope() {
    // new scopes are appended to
    // the end of the symboltable
    //
-   std::cout << "symbolbtypes Pushing scope before: " << symbolTableRef->id << std::endl;
+   chplx::util::dout << "symbolbtypes Pushing scope before: " << symbolTableRef->id << std::endl;
    symbolTableRef->children.push_back(
       std::make_shared<SymbolTableNode>(SymbolTableNode{lut.size(), {}, {}, symbolTableRef, parentModuleId})
    );
 
    symbolTableRef = std::get<std::shared_ptr<SymbolTableNode>>(symbolTableRef->children.back());
-   std::cout << "symbolbtypes Pushing scope after: " << symbolTableRef->id << std::endl;
+   chplx::util::dout << "symbolbtypes Pushing scope after: " << symbolTableRef->id << std::endl;
 
    lut.push_back(symbolTableRef);
    return lut.size();   
@@ -42,10 +42,10 @@ std::size_t SymbolTable::pushScope() {
 
 void SymbolTable::popScope() {
    if(symbolTableRef->parent.index() != 0 && std::holds_alternative<std::shared_ptr<SymbolTableNode>>(symbolTableRef->parent)) {
-      std::cout << "symbolbtypes Popping scope: " << symbolTableRef->id << std::endl;
+      chplx::util::dout << "symbolbtypes Popping scope: " << symbolTableRef->id << std::endl;
       symbolTableRef = std::get<std::shared_ptr<SymbolTableNode>>(symbolTableRef->parent);
    }else{
-      std::cout << "symbolbtypes Cannot pop scope: " << symbolTableRef->id << std::endl;
+      chplx::util::dout << "symbolbtypes Cannot pop scope: " << symbolTableRef->id << std::endl;
    }
 }
 

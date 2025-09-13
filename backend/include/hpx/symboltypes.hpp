@@ -25,6 +25,8 @@
 #include <memory>
 #include <optional>
 
+#include "hpx/utils.hpp"
+
 //using namespace chplx::util;
 
 namespace chpl { namespace ast { namespace visitors { namespace hpx {

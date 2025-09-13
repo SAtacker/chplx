@@ -480,7 +480,7 @@ struct ArgumentVisitor {
        os << '\"' << string_kind::value(node) << '\"';
     }
     void operator()(LiteralExpression const& e) {
-      std::cout << "LiteralExpression: " << e.kind.index() << std::endl;
+      chplx::util::dout << "LiteralExpression: " << e.kind.index() << std::endl;
        node = e.value;
        std::visit(*this, e.kind);
     }
@@ -489,7 +489,7 @@ struct ArgumentVisitor {
        if(ident == "numLocales") {
           ident = "chplx::numLocales";
        }
-      std::cout << "VariableExpression: " << ident << std::endl;
+      chplx::util::dout << "VariableExpression: " << ident << std::endl;
        os << ident;
     }
     void operator()(std::shared_ptr<FunctionCallExpression> const& node) {
@@ -584,8 +584,8 @@ void FunctionCallExpression::emit(std::ostream & os) const {
       const std::size_t args_sz = arguments.size();
       std::string fn_fmt_str{};
       fmt::dynamic_format_arg_store<fmt::format_context> store;
-      std::cout << "Function Call: " << symbol.identifier << std::endl;
-      std::cout << "Function Call Arguments: " << args_sz << std::endl;
+      chplx::util::dout << "Function Call: " << symbol.identifier << std::endl;
+      chplx::util::dout << "Function Call Arguments: " << args_sz << std::endl;
       if((symbol.identifier) == "[]" && 0 < args_sz) {
           ArgumentVisitor v{nullptr, std::stringstream{}};
           std::visit(v, arguments[0]);
@@ -616,7 +616,7 @@ void FunctionCallExpression::emit(std::ostream & os) const {
          for(std::size_t i = 0; i < args_sz; ++i) {
             fn_fmt_str += (i < 1) ? "{}" : ", {}";
             Statement const& stmt = arguments[i];
-            std::cout << "Function Call Argument: " << i << " argument kind: " << stmt.index() << std::endl;
+            chplx::util::dout << "Function Call Argument: " << i << " argument kind: " << stmt.index() << std::endl;
             ArgumentVisitor v{nullptr, std::stringstream{}};
             std::visit(v, stmt);
             store.push_back(v.os.str());

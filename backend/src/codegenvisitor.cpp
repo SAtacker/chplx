@@ -824,7 +824,7 @@ struct StatementVisitor {
       os << ", [](auto&& " << node->OnLocale->identifier ;
       if (node->OnLocaleVarsUsedInExpr.size() > 0)
       {
-         std::cout << "OnExpression OnLocaleVarsUsedInExpr size: "
+         chplx::util::dout << "OnExpression OnLocaleVarsUsedInExpr size: "
                    << node->OnLocaleVarsUsedInExpr.size() << std::endl;
          std::map<std::string, bool> printed_vars;
          printed_vars[node->OnLocale->identifier] = true;
@@ -859,7 +859,7 @@ struct StatementVisitor {
       os << "}, " << node->OnLocale->identifier ;
       if (node->OnLocaleVarsUsedInExpr.size() > 0)
       {
-         std::cout << "OnExpression OnLocaleVarsUsedInExpr size: "
+         chplx::util::dout << "OnExpression OnLocaleVarsUsedInExpr size: "
                    << node->OnLocaleVarsUsedInExpr.size() << std::endl;
          std::map<std::string, bool> printed_vars;
          printed_vars[node->OnLocale->identifier] = true;
